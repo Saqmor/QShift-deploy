@@ -74,15 +74,15 @@ function ShiftConfigPage({onPageChange, selectedDays}) {
     };
 
     const saveConfigShift = async () => {
-        // TODO: guardar shifts em alguma estrutura JSON e mandar pro backend
+        // TODO: guardar shifts em alguma estrutura JSON pode ser em uma matriz de dicionários(structs) de células com horários de turnos (startTime - endTime) e quantidade de funcionários e mandar pro backend
     };
 
     const restoreConfigShift = async () => {
-        // TODO: Receber do backend shifts em uma matriz de dicionários(structs) de células com horários de turnos e funcionários
+        // TODO: Receber do backend shifts em uma matriz de dicionários(structs) de células com horários de turnos (startTime - endTime) e quantidade de funcionários
     }
 
     const createSchedule = async () => {
-        // TODO: guardar shifts em alguma estrutura JSON e mandar pro backend
+        // TODO: guardar shifts em alguma estrutura JSON pode ser em uma matriz de dicionários(structs) de células com horários de turnos (startTime - endTime) e quantidade de funcionários e mandar pro backend
     }
  
     return (

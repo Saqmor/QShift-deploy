@@ -346,7 +346,12 @@ function AvailabilityPage({
     const handleSave = () => {
         console.log('Salvando disponibilidade:', { name, isActive, availability });
         // TODO: Enviar para o backend
-        // await api.updateEmployeeAvailability(employeeId, { name, isActive, availability }); usar axios ou fetch
+        if (selectEditEmployee) {
+          // await api.updateEmployeeAvailability(employeeId, { name, isActive, availability }); usar axios ou fetch
+        } else {
+          // criar um newEmployeeId
+          // await api.addNewEmployee(newEmployeeId, { name, isActive, availability }); usar axios ou fetch
+        }
         onPageChange(1); // Volta para a página de Staff
     };
     

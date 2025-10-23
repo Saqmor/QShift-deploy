@@ -58,7 +58,6 @@ function CalendarPage ({
   const handleAdvance = () => {
     if (selectedWeek && selectedDays.length > 0) {
       console.log('Avançando com:', { selectedWeek, selectedDays });
-      // TODO: Aqui faria a chamada à API
       onPageChange(5);
     }
   };
