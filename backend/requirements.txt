@@ -14,5 +14,4 @@ python-dotenv
 
 # Tests
 pytest
-pytest-asyncio
 httpx
