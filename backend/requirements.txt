@@ -3,8 +3,8 @@ fastapi
 uvicorn[standard]
 
 # Database
-sqlalchemy[asyncio]
-asyncpg
+sqlalchemy
+psycopg[binary]
 alembic
 
 # Config
