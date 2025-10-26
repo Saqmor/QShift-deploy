@@ -7,7 +7,7 @@ import AvailabilityPage from './pages/AvailabilityPage.jsx';
 import ShiftConfigPage from './pages/ShiftConfigPage.jsx';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const now = new Date();
   const [currentMonth, setCurrentMonth] = useState(now.getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(now.getFullYear());

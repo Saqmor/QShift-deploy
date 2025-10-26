@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import {Users, Plus} from 'lucide-react';
+import {Users, Plus, ArrowRight} from 'lucide-react';
 import BaseLayout from '../layouts/BaseLayout.jsx';
 import Header from '../components/Header.jsx';
 import {StaffApi} from '../services/api.js';
@@ -42,6 +42,10 @@ function StaffPage({
             emp.id === employeeId ? {...emp, active: !emp.active} : emp
         ));
         console.log('Toggle status:', employeeId, !currentStatus);
+    };
+
+    const handleAdvance = () => {
+        onPageChange(0);
     };
 
   return (
@@ -104,12 +108,22 @@ function StaffPage({
           </button>
         </div>
 
-        {/* Mensagem quando não há funcionários */}
-        {employees.length === 0 && (
+        {employees.length === 0 ? (
           <div className="text-slate-400 text-center py-12">
             No employees registered yet
           </div>
+        ) : (
+          <div className="flex justify-end">
+            <button
+              onClick={handleAdvance}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              Next
+              <ArrowRight size={20} />
+            </button>
+          </div>
         )}
+
       </div>
     </BaseLayout>
   );
