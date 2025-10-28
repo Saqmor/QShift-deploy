@@ -30,7 +30,7 @@ function ShiftConfigPage({onPageChange, selectedDays}) {
 
     const handleCancel = () => {
         console.log("Voltando para página de calendário");
-        onPageChange(1);
+        onPageChange(2);
     };
 
     const addTurn = () => {
@@ -98,7 +98,7 @@ const updateShiftConfig = (shiftId, dayOfWeek, field, value) => {
     return (
         <BaseLayout
             showSidebar={false}
-            currentPage={5}
+            currentPage={6}
             showSelectionPanel={true}
             selectionPanelData={{ none: null ,selectedDays }}
             onPageChange={onPageChange}

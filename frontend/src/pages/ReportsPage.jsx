@@ -13,7 +13,7 @@ function ReportsPage({ onPageChange}) {
     ];
 
     return (
-        <BaseLayout currentPage={2} onPageChange={onPageChange}>
+        <BaseLayout currentPage={3} onPageChange={onPageChange}>
             <Header title="Reports and Analysis" icon={BarChart3} />
 
             <div className="flex gap-4 flex-wrap">

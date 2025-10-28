@@ -15,8 +15,6 @@ function App() {
   const [selectedWeek, setSelectedWeek] = useState(null);
   const [selectedDays, setSelectedDays] = useState([]);
   const [selectEditEmployee, setSelectEditEmployee] = useState(null)
-  const [user, setUser] = useState(null);
-
 
   const pages = [
     <LoginPage
