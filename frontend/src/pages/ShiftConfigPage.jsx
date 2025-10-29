@@ -78,13 +78,35 @@ const updateShiftConfig = (shiftId, dayOfWeek, field, value) => {
 };
 
     const saveConfigShift = () => {
-        // TODO: guardar shifts em alguma estrutura JSON pode ser em uma matriz de dicionários(structs) de células com horários de turnos (startTime - endTime) e quantidade de funcionários e mandar pro backend
-        // TODO: mandar pra um cache local
+        const configToSave = shifts.map(shift => ({
+            id: shift.id,
+            config: shift.config.map(dayConfig => ({
+                startTime: dayConfig.startTime,
+                endTime: dayConfig.endTime,
+                employees: dayConfig.employees
+            }))
+        }));
+        localStorage.setItem('shiftConfigurations', JSON.stringify(configToSave));
+        console.log("Configurações de turno salvas:", configToSave);
     };
 
     const restoreConfigShift = () => {
-        // TODO: Receber do backend shifts em uma matriz de dicionários(structs) de células com horários de turnos (startTime - endTime) e quantidade de funcionários
-        // TODO: receber do cache local
+        const savedConfig = localStorage.getItem('shiftConfigurations');
+        if (savedConfig) {
+            const parsedConfig = JSON.parse(savedConfig);
+            const restoredShifts = parsedConfig.map(shift => ({
+                ...shift,
+                config: shift.config.map((dayConfig, index) => ({
+                    ...dayConfig,
+                    id: crypto.randomUUID(),
+                    localDate: selectedDaysMap[index] || null
+                }))
+            }));
+            setShifts(restoredShifts);
+            console.log("Configurações de turno restauradas:", restoredShifts);
+        } else {
+            console.log("Nenhuma configuração salva encontrada.");
+        }
     }
 
     const createSchedule = () => {

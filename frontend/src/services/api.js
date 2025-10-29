@@ -19,15 +19,6 @@ api.interceptors.request.use(config => {
 });
 
 export const ShiftConfigApi = {
-    save: async (shifts) => {
-        return await api.post('/shifts-config-save', {shifts});
-    },
-    //TODO: Ver save e restore do config de shifts com cache
-
-    restore: async () => {
-    return await api.get('/shifts-config-restore');
-    },
-
     createShcedule: async (schedule) => {
         return await api.post('/create-schedule', {schedule});
     }
