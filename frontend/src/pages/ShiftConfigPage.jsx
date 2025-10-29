@@ -89,7 +89,11 @@ const updateShiftConfig = (shiftId, dayOfWeek, field, value) => {
         const schedule = {
             id: Date.now(),
             shifts,
-            selectedDays
+            week: {
+                id: Date.now(),
+                selectedDays: selectedDays,
+                approved: false
+            }
         };
         ShiftConfigApi.createShcedule(schedule);
         console.log("Criando escala com:", schedule);
