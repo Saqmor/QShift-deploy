@@ -15,15 +15,15 @@ function ShiftConfigPage({onPageChange, selectedDays}) {
 
     const [shifts, setShifts] = useState([
         {
-            id:1,
+            id: 1,
             config: [
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[0], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[1], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[2], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[3], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[4], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[5], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[6], startTime: '', endTime: '', employees: ''},
             ]
         }
     ]);
@@ -36,17 +36,19 @@ function ShiftConfigPage({onPageChange, selectedDays}) {
     const addTurn = () => {
         //TODO: colocar o data em cada turno está relacionado com os dias selecionados
         const newShift = {
+            id: Date.now(),
             config: [
-                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
-                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
-                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
-                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
-                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
-                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
-                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[0], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[1], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[2], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[3], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[4], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[5], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[6], startTime: '', endTime: '', employees: ''},
             ]
         }
         setShifts([...shifts, newShift]);
+        console.log("Adicionando novo turno:", newShift);
     };
 
     const removeShift = (shiftId) => {
