@@ -34,16 +34,16 @@ function ShiftConfigPage({onPageChange, selectedDays}) {
     };
 
     const addTurn = () => {
+        //TODO: colocar o data em cada turno está relacionado com os dias selecionados
         const newShift = {
-            id: Date.now(),
             config: [
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), startTime: '', endTime: '', employees: ''},
             ]
         }
         setShifts([...shifts, newShift]);
