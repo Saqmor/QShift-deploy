@@ -3,19 +3,22 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
   timeout: 10000,
-  Headers: {'Content-Type': 'application/json'}
+  headers: {'Content-Type': 'application/json'}
+});
+
+api.interceptors.request.use(config => {
+    const userId = localStorage.getItem("user_id");
+    if (userId) {
+        config.headers['X-User-ID'] = userId;
+    }
+    // TODO: Adicionar token de autenticação se necessário
+
+    return config;
+}, error => {
+    return Promise.reject(error);
 });
 
 export const ShiftConfigApi = {
-    save: async (shifts) => {
-        return await api.post('/shifts-config-save', {shifts});
-    },
-    //TODO: Ver save e restore do config de shifts com cache
-
-    restore: async () => {
-        return await api.get('/shifts-config-restore');
-    },
-
     createShcedule: async (schedule) => {
         return await api.post('/create-schedule', {schedule});
     }
@@ -23,11 +26,11 @@ export const ShiftConfigApi = {
 
 export const StaffApi = {
     getAll: async () => {
-        return await api.get('/employees');
+    return await api.get('/employees');
     },
 
     toggleActive: async (employeeId, isActive) => {
-        return await api.patch(`/employees/${employeeId}/toggle-active`, { active: isActive });
+        return await api.patch(`/employees/${employeeId}/toggle-active`, {active: isActive});
     }
 };
 
@@ -45,7 +48,7 @@ export const AvailabilityApi = {
     },
 
     addNewEmployee: async (employeeData) => {
-        return await api.post('/employees', employeeData);
+        return await api.post('/employees', {employeeData});
     }
     // TODO:passa um ID
 }

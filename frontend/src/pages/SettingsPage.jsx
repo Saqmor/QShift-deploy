@@ -5,7 +5,7 @@ import Header from '../components/Header.jsx';
 function SettingsPage({onPageChange}) {
     
     return (
-        <BaseLayout currentPage={3} onPageChange={onPageChange}>
+        <BaseLayout currentPage={4} onPageChange={onPageChange}>
             <Header title="System Settings" icon={Settings}/>
             <div className="space-y-4">
                 <div className="text-slate-400">

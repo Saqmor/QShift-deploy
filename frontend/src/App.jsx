@@ -5,6 +5,7 @@ import ReportsPage from './pages/ReportsPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import AvailabilityPage from './pages/AvailabilityPage.jsx';
 import ShiftConfigPage from './pages/ShiftConfigPage.jsx';
+import LoginPage from './pages/LoginPage.jsx';
 
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
@@ -15,8 +16,10 @@ function App() {
   const [selectedDays, setSelectedDays] = useState([]);
   const [selectEditEmployee, setSelectEditEmployee] = useState(null)
 
-
   const pages = [
+    <LoginPage
+      onPageChange={setCurrentPage}
+    />,
     <StaffPage 
       onPageChange={setCurrentPage}
       selectEditEmployee={selectEditEmployee}

@@ -361,22 +361,21 @@ function AvailabilityPage({
           AvailabilityApi.addNewEmployee(Data);
           console.log('Novo funcionário adicionado:', Data);
         }
-        onPageChange(0);
+        onPageChange(1);
     };
     
     const handleCancel = () => {
-        onPageChange(0);
+        onPageChange(1);
     };
 
   return (
     <BaseLayout 
         showSidebar={false}
-        currentPage={4} 
+        currentPage={5} 
         onPageChange={onPageChange}>
       <Header title="Employee availability" icon={Calendar} />
       
       <div className="space-y-6" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
-        {/* Seção de informações do funcionário */}
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 space-y-4">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center">
@@ -423,7 +422,7 @@ function AvailabilityPage({
           </div>
         </div>
         
-        {/* Grade de disponibilidade */}
+        {/* TODO: Ajeitar o tamanho da tabela de disponibilidade ou trocar linha pela coluna*/}
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-white mb-2">Select Availability</h3>

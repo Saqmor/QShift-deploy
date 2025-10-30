@@ -15,38 +15,40 @@ function ShiftConfigPage({onPageChange, selectedDays}) {
 
     const [shifts, setShifts] = useState([
         {
-            id:1,
+            id: 1,
             config: [
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[0], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[1], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[2], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[3], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[4], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[5], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(), localDate: selectedDaysMap[6], startTime: '', endTime: '', employees: ''},
             ]
         }
     ]);
 
     const handleCancel = () => {
         console.log("Voltando para página de calendário");
-        onPageChange(1);
+        onPageChange(2);
     };
 
     const addTurn = () => {
+        //TODO: colocar o data em cada turno está relacionado com os dias selecionados
         const newShift = {
             id: Date.now(),
             config: [
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
-                {startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[0], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[1], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[2], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[3], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[4], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[5], startTime: '', endTime: '', employees: ''},
+                {id: crypto.randomUUID(),  localDate: selectedDaysMap[6], startTime: '', endTime: '', employees: ''},
             ]
         }
         setShifts([...shifts, newShift]);
+        console.log("Adicionando novo turno:", newShift);
     };
 
     const removeShift = (shiftId) => {
@@ -55,41 +57,79 @@ function ShiftConfigPage({onPageChange, selectedDays}) {
         }
     };
 
-const updateShiftConfig = (shiftId, dayOfWeek, field, value) => {
-    setShifts(shifts.map(shift => {
-        if (shift.id === shiftId) {
-            return {
-                ...shift,
-                config: shift.config.map((dayConfig, index) => {
-                    if (index === dayOfWeek) {
-                        return {
-                            ...dayConfig,
-                            [field]: value
-                        };
-                    }
-                    return dayConfig;
-                })
-            };
-        }
-        return shift;
-    }));
-};
+    const updateShiftConfig = (shiftId, dayOfWeek, field, value) => {
+        setShifts(shifts.map(shift => {
+            if (shift.id === shiftId) {
+                return {
+                    ...shift,
+                    config: shift.config.map((dayConfig, index) => {
+                        if (index === dayOfWeek) {
+                            return {
+                                ...dayConfig,
+                                [field]: value
+                            };
+                        }
+                        return dayConfig;
+                    })
+                };
+            }
+            return shift;
+        }));
+    };
+
+    // TODO: Trocar quando for para usar arquivos ao invés de localStorage
+    // const fs = require('fs');
+    // const path = require('path');
 
     const saveConfigShift = () => {
-        // TODO: guardar shifts em alguma estrutura JSON pode ser em uma matriz de dicionários(structs) de células com horários de turnos (startTime - endTime) e quantidade de funcionários e mandar pro backend
-        // TODO: mandar pra um cache local
+        const configToSave = shifts.map(shift => ({
+            id: shift.id,
+            config: shift.config.map(dayConfig => ({
+                startTime: dayConfig.startTime,
+                endTime: dayConfig.endTime,
+                employees: dayConfig.employees
+            }))
+        }));
+        // const configPath = path.join(__dirname, 'shiftConfigurations.json');
+        // fs.writeFileSync(configPath, JSON.stringify(configToSave, null, 2));
+        localStorage.setItem('shiftConfigurations', JSON.stringify(configToSave));
+        console.log("Configurações de turno salvas:", configToSave);
     };
 
     const restoreConfigShift = () => {
-        // TODO: Receber do backend shifts em uma matriz de dicionários(structs) de células com horários de turnos (startTime - endTime) e quantidade de funcionários
-        // TODO: receber do cache local
+        /* const configPath = path.join(__dirname, 'shiftConfigurations.json');
+        if (!fs.existsSync(configPath)) {
+            console.log("Nenhum arquivo de configuração encontrado.");
+            return;
+        }
+        const savedConfig = fs.readFileSync(configPath); */
+        const savedConfig =  localStorage.getItem('shiftConfigurations');
+        if (savedConfig) {
+            const parsedConfig = JSON.parse(savedConfig);
+            const restoredShifts = parsedConfig.map(shift => ({
+                ...shift,
+                config: shift.config.map((dayConfig, index) => ({
+                    ...dayConfig,
+                    id: crypto.randomUUID(),
+                    localDate: selectedDaysMap[index] || null
+                }))
+            }));
+            setShifts(restoredShifts);
+            console.log("Configurações de turno restauradas:", restoredShifts);
+        } else {
+            console.log("Nenhuma configuração salva encontrada.");
+        }
     }
 
     const createSchedule = () => {
         const schedule = {
             id: Date.now(),
             shifts,
-            selectedDays
+            week: {
+                id: Date.now(),
+                selectedDays: selectedDays,
+                approved: false
+            }
         };
         ShiftConfigApi.createShcedule(schedule);
         console.log("Criando escala com:", schedule);
@@ -98,7 +138,7 @@ const updateShiftConfig = (shiftId, dayOfWeek, field, value) => {
     return (
         <BaseLayout
             showSidebar={false}
-            currentPage={5}
+            currentPage={6}
             showSelectionPanel={true}
             selectionPanelData={{ none: null ,selectedDays }}
             onPageChange={onPageChange}

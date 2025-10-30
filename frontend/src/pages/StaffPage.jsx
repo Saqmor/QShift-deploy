@@ -11,6 +11,15 @@ function StaffPage({
   }) {
     //TODO: receber os dados do backend dos funcionários
     /*
+    utilizar useEffect para buscar os dados ao carregar a página
+    useEffect(() => {
+        async function Employees() {
+            const response = await StaffApi.getAll();
+            setEmployees(response.data);
+        }
+        Employees();
+    }, []);
+    exemplo de fetch:
     const response = StaffApi.getAll();
     console.log('Fetched employees:', response.data);
     */
@@ -27,13 +36,13 @@ function StaffPage({
     const handleAddEmployee = () => {
         console.log('Add employee');
         setSelectEditEmployee(null);
-        onPageChange(4);
+        onPageChange(5);
     };
 
     const handleEditEmployee = (employeeId) => {
         console.log('Edit employee:', employeeId);
         setSelectEditEmployee(employeeId);
-        onPageChange(4);
+        onPageChange(5);
     }
 
     const handleToggleActive = async (employeeId, currentStatus) => {
@@ -45,11 +54,11 @@ function StaffPage({
     };
 
     const handleAdvance = () => {
-        onPageChange(1);
+        onPageChange(2);
     };
 
   return (
-    <BaseLayout currentPage={0} onPageChange={onPageChange}>
+    <BaseLayout currentPage={1} onPageChange={onPageChange}>
       <Header title="Employee Management" icon={Users} />
       
       <div className="space-y-4">

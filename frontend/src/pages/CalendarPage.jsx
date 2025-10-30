@@ -58,12 +58,12 @@ function CalendarPage ({
   const handleAdvance = () => {
     if (selectedWeek && selectedDays.length > 0) {
       console.log('Avançando com:', { selectedWeek, selectedDays });
-      onPageChange(5);
+      onPageChange(6);
     }
   };
 
   const handleBack = () => {
-    onPageChange(0);
+    onPageChange(1);
   };
 
 const months = [
@@ -76,7 +76,7 @@ const months = [
       showSidebar={true} 
       showSelectionPanel={true}
       selectionPanelData={{ selectedWeek, selectedDays }}
-      currentPage={1}
+      currentPage={2}
       onPageChange={onPageChange}
     >
       <Header title="Calendar" icon={Calendar}>
