@@ -12,7 +12,9 @@ function CalendarPage ({
   selectedWeek,
   setSelectedWeek,
   selectedDays,
-  setSelectedDays
+  setSelectedDays,
+  startDate,
+  setStartDate
   }) {
 
   const handlePrevMonth = () => {
@@ -53,6 +55,7 @@ function CalendarPage ({
   const toggleWeek = (week, weekIdx) => {
     setSelectedWeek(weekIdx + 1);
     setSelectedDays([...week].sort((a, b) => a - b));
+    setStartDate(week[0]);
   };
 
   const handleAdvance = () => {
@@ -75,7 +78,7 @@ const months = [
     <BaseLayout 
       showSidebar={true} 
       showSelectionPanel={true}
-      selectionPanelData={{ selectedWeek, selectedDays }}
+      selectionPanelData={{ startDate, selectedDays }}
       currentPage={2}
       onPageChange={onPageChange}
     >

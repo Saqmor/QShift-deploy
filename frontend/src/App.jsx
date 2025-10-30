@@ -15,6 +15,7 @@ function App() {
   const [selectedWeek, setSelectedWeek] = useState(null);
   const [selectedDays, setSelectedDays] = useState([]);
   const [selectEditEmployee, setSelectEditEmployee] = useState(null)
+  const [startDate, setStartDate] = useState(null);
 
   const pages = [
     <LoginPage
@@ -35,6 +36,8 @@ function App() {
       setSelectedWeek={setSelectedWeek}
       selectedDays={selectedDays}
       setSelectedDays={setSelectedDays}
+      startDate={startDate}
+      setStartDate={setStartDate}
     />,
     <ReportsPage onPageChange={setCurrentPage} />,
     <SettingsPage onPageChange={setCurrentPage} />,
@@ -46,6 +49,7 @@ function App() {
     <ShiftConfigPage 
       onPageChange={setCurrentPage}
       selectedDays={selectedDays}
+      startDate={startDate}
     />
   ];
 
