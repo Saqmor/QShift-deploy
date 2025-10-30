@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Plus, Save, RotateCcw, Calendar, Trash2 } from 'lucide-react';
 import { ShiftConfigApi }   from '../services/api.js';
 
-function ShiftConfigPage({onPageChange, selectedDays}) {
+function ShiftConfigPage({onPageChange, selectedDays, startDate}) {
 
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -140,7 +140,7 @@ function ShiftConfigPage({onPageChange, selectedDays}) {
             showSidebar={false}
             currentPage={6}
             showSelectionPanel={true}
-            selectionPanelData={{ none: null ,selectedDays }}
+            selectionPanelData={{ startDate, selectedDays }}
             onPageChange={onPageChange}
         >
             <Header title="Shift Configuration" />
