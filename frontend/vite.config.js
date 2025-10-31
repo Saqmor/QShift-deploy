@@ -16,8 +16,8 @@ export default defineConfig({
       manifest: {
         name: 'QShift',
         short_name: 'QShift',
-        theme_color: '#2196f3',
-        background_color: '#2196f3',
+        theme_color: '#3f415aff',
+        background_color: '#3f415aff',
         display: 'standalone',
         scope: '/',
         start_url: '/',
