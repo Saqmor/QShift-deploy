@@ -8,10 +8,10 @@ const INITIAL_SCHEDULE = {
   // Cada dia tem seus próprios horários
   monday: {
     slots: [
-      { id: 1, startTime: '08:00', endTime: '11:00', label: '8h-11h', minEmployees: 2 },
-      { id: 2, startTime: '08:00', endTime: '12:00', label: '8h-12h', minEmployees: 2 },
-      { id: 3, startTime: '13:00', endTime: '18:00', label: '13h-18h', minEmployees: 2 },
-      { id: 4, startTime: '14:00', endTime: '19:00', label: '14h-19h', minEmployees: 3 },
+      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2 },
+      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2 },
+      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2 },
+      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3 },
     ],
     assignments: {
       1: ['Gabriel'],
@@ -21,10 +21,10 @@ const INITIAL_SCHEDULE = {
   },
   tuesday: {
     slots: [
-      { id: 1, startTime: '08:00', endTime: '11:00', label: '8h-11h', minEmployees: 2 },
-      { id: 2, startTime: '08:00', endTime: '12:00', label: '8h-12h', minEmployees: 2 },
-      { id: 3, startTime: '13:00', endTime: '18:00', label: '13h-18h', minEmployees: 2 },
-      { id: 4, startTime: '14:00', endTime: '19:00', label: '14h-19h', minEmployees: 3 },
+      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2 },
+      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2 },
+      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2 },
+      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3 },
     ],
     assignments: {
         2:['Artur','Gabriel'],
@@ -34,19 +34,19 @@ const INITIAL_SCHEDULE = {
   },
   wednesday: {
     slots: [
-      { id: 1, startTime: '08:00', endTime: '11:00', label: '8h-11h', minEmployees: 2 },
-      { id: 2, startTime: '08:00', endTime: '12:00', label: '8h-12h', minEmployees: 2 },
-      { id: 3, startTime: '13:00', endTime: '18:00', label: '13h-18h', minEmployees: 2 },
-      { id: 4, startTime: '14:00', endTime: '19:00', label: '14h-19h', minEmployees: 3 },
+      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2 },
+      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2 },
+      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2 },
+      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3 },
     ],
     assignments: {}
   },
   thursday: {
     slots: [
-      { id: 1, startTime: '08:00', endTime: '11:00', label: '8h-11h', minEmployees: 2 },
-      { id: 2, startTime: '08:00', endTime: '12:00', label: '8h-12h', minEmployees: 2 },
-      { id: 3, startTime: '13:00', endTime: '18:00', label: '13h-18h', minEmployees: 2 },
-      { id: 4, startTime: '14:00', endTime: '19:00', label: '14h-19h', minEmployees: 3 },
+      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2 },
+      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2 },
+      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2 },
+      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3 },
     ],
     assignments: {
         1: ['Guilherme', 'Ângelo'],
@@ -56,10 +56,10 @@ const INITIAL_SCHEDULE = {
   },
   friday: {
     slots: [
-      { id: 1, startTime: '08:00', endTime: '11:00', label: '8h-11h', minEmployees: 2 },
-      { id: 2, startTime: '08:00', endTime: '12:00', label: '8h-12h', minEmployees: 2 },
-      { id: 3, startTime: '13:00', endTime: '18:00', label: '13h-18h', minEmployees: 2 },
-      { id: 4, startTime: '14:00', endTime: '19:00', label: '14h-19h', minEmployees: 3 },
+      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2 },
+      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2 },
+      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2 },
+      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3 },
     ],
     assignments: {
         1: ['Arthur'],
@@ -69,10 +69,10 @@ const INITIAL_SCHEDULE = {
   },
   saturday: {
     slots: [
-      { id: 101, startTime: '09:00', endTime: '13:00', label: '9h-13h', minEmployees: 3 },
-      { id: 102, startTime: '09:00', endTime: '15:00', label: '9h-15h', minEmployees: 4 },
-      { id: 103, startTime: '13:00', endTime: '18:00', label: '13h-18h', minEmployees: 4 },
-      { id: 104, startTime: '14:00', endTime: '20:00', label: '14h-20h', minEmployees: 5 },
+      { id: 101, startTime: '09:00', endTime: '13:00', minEmployees: 3 },
+      { id: 102, startTime: '09:00', endTime: '15:00', minEmployees: 4 },
+      { id: 103, startTime: '13:00', endTime: '18:00', minEmployees: 4 },
+      { id: 104, startTime: '14:00', endTime: '20:00', minEmployees: 5 },
     ],
     assignments: {
       101: ['Gabriel', 'Artur', 'Guilherme'],
@@ -85,14 +85,23 @@ const INITIAL_SCHEDULE = {
   }
 };
 
+const week = {
+  id: 5,
+  startDateWeek: new Date(2025, 9, 27),
+  selectedDays: [27, 28, 29, 30, 31, 1],
+  approved: false
+}
+
 function GeneratedSchedule({onPageChange}) {
     const [scheduleData, setScheduleData] = useState(INITIAL_SCHEDULE);
+    const [editMode, setEditMode] = useState(false);
 
     function handleCancel() {
         onPageChange(1);
     };
 
     function handleEdit() {
+        setEditMode(!editMode);
         onPageChange(7);
     };
 
@@ -110,38 +119,56 @@ function GeneratedSchedule({onPageChange}) {
             <div className="p-3">
                 <ScheduleTable
                     scheduleData={scheduleData}
+                    week={week}
+                    editMode={editMode}
                 />
-                <div className="flex mt-4">
-                    <div className="flex-1 justify-start flex">
-                        <div className='px-2 py-1.5 rounded text-center font-medium'>
-                            <button
-                                onClick={handleCancel}
-                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
 
-                    <div className="justify-end flex flex-1">
-                        <div className='px-2 py-1.5 rounded text-center font-medium'>
-                            <button
-                                onClick={handleEdit}
-                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                            >
-                                Edit
-                            </button>
-                        </div>
-                        <div className='px-2 py-1.5 rounded text-center font-medium'>
-                            <button
-                                onClick={handleApproved}
-                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                            >
-                                Approved
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                {!editMode ? (
+                  <div className="flex mt-4">
+                      <div className="flex-1 justify-start flex">
+                          <div className='px-2 py-1.5 rounded text-center font-medium'>
+                              <button
+                                  onClick={handleCancel}
+                                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                              >
+                                  Cancel
+                              </button>
+                          </div>
+                      </div>
+
+                      <div className="justify-end flex flex-1">
+                          <div className='px-2 py-1.5 rounded text-center font-medium'>
+                              <button
+                                  onClick={handleEdit}
+                                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                              >
+                                  Edit
+                              </button>
+                          </div>
+                          <div className='px-2 py-1.5 rounded text-center font-medium'>
+                              <button
+                                  onClick={handleApproved}
+                                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                              >
+                                  Approved
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+                ) : (
+                  <div className="flex mt-4">
+                      <div className="flex-1 justify-end flex">
+                          <div className='px-40 py-1.5 rounded text-center font-medium'>
+                              <button
+                                  onClick={handleEdit}
+                                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                              >
+                                  Save
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+                )}
             </div>
         </BaseLayout>
     );
