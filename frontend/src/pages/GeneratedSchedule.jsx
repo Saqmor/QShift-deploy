@@ -87,16 +87,61 @@ const INITIAL_SCHEDULE = {
 
 function GeneratedSchedule({onPageChange}) {
     const [scheduleData, setScheduleData] = useState(INITIAL_SCHEDULE);
+
+    function handleCancel() {
+        onPageChange(1);
+    };
+
+    function handleEdit() {
+        onPageChange(7);
+    };
+
+    function handleApproved() {
+        // Lógica para aprovar a escala
+        alert("Schedule approved!");
+        onPageChange(1);
+    };
     return (
         <BaseLayout
             showSidebar={false}
             currentPage={7}
         >
             <Header title="Generated Schedule" />
-            <div className="p-6">
+            <div className="p-3">
                 <ScheduleTable
                     scheduleData={scheduleData}
                 />
+                <div className="flex mt-4">
+                    <div className="flex-1 justify-start flex">
+                        <div className='px-2 py-1.5 rounded text-center font-medium'>
+                            <button
+                                onClick={handleCancel}
+                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="justify-end flex flex-1">
+                        <div className='px-2 py-1.5 rounded text-center font-medium'>
+                            <button
+                                onClick={handleEdit}
+                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                            >
+                                Edit
+                            </button>
+                        </div>
+                        <div className='px-2 py-1.5 rounded text-center font-medium'>
+                            <button
+                                onClick={handleApproved}
+                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                            >
+                                Approved
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </BaseLayout>
     );
