@@ -6,83 +6,43 @@ import { useState } from 'react';
 // DADOS MOCKADOS
 const INITIAL_SCHEDULE = {
   // Cada dia tem seus próprios horários
-  monday: {
-    slots: [
-      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2 },
-      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2 },
-      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2 },
-      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3 },
-    ],
-    assignments: {
-      1: ['Gabriel'],
-      2: ['Artur', 'Guilherme'],
-      4: ['Arthur']
-    }
-  },
-  tuesday: {
-    slots: [
-      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2 },
-      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2 },
-      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2 },
-      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3 },
-    ],
-    assignments: {
-        2:['Artur','Gabriel'],
-        3:['Guilherme'],
-        4:['Arthur','Ângelo']
-    }
-  },
-  wednesday: {
-    slots: [
-      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2 },
-      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2 },
-      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2 },
-      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3 },
-    ],
-    assignments: {}
-  },
-  thursday: {
-    slots: [
-      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2 },
-      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2 },
-      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2 },
-      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3 },
-    ],
-    assignments: {
-        1: ['Guilherme', 'Ângelo'],
-        3: ['Gabriel'],
-        4: ['Arthur', 'Artur']
-    }
-  },
-  friday: {
-    slots: [
-      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2 },
-      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2 },
-      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2 },
-      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3 },
-    ],
-    assignments: {
-        1: ['Arthur'],
-        2: ['Guilherme', 'Gabriel'],
-        4: ['Artur']
-    }
-  },
-  saturday: {
-    slots: [
-      { id: 101, startTime: '09:00', endTime: '13:00', minEmployees: 3 },
-      { id: 102, startTime: '09:00', endTime: '15:00', minEmployees: 4 },
-      { id: 103, startTime: '13:00', endTime: '18:00', minEmployees: 4 },
-      { id: 104, startTime: '14:00', endTime: '20:00', minEmployees: 5 },
-    ],
-    assignments: {
-      101: ['Gabriel', 'Artur', 'Guilherme'],
-      102: ['Arthur', 'Ângelo'],
-    }
-  },
-  sunday: {
-    slots: [],
-    assignments: {}
-  }
+  monday: [
+    { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: ['Gabriel'] },
+    { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: ['Artur', 'Guilherme'] },
+    { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: [] },
+    { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: ['Arthur']},
+  ],
+  tuesday: [
+    { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: ['Artur','Gabriel'] },
+    { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: [] },
+    { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: ['Guilherme'] },
+    { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: ['Arthur','Ângelo'] },
+  ],
+  wednesday: [
+    { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: [] },
+    { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: [] },
+    { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: [] },
+    { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: [] },
+  ],
+  thursday: [
+      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: ['Guilherme', 'Ângelo']},
+      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: [] },
+      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: ['Gabriel'] },
+      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: ['Arthur', 'Artur'] },
+  ],
+  friday: [
+      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: ['Arthur'] },
+      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: ['Guilherme', 'Gabriel'] },
+      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: [] },
+      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: ['Artur'] },
+  ],
+  saturday: [
+      { id: 101, startTime: '09:00', endTime: '13:00', minEmployees: 3, employees: ['Gabriel', 'Artur', 'Guilherme'] },
+      { id: 102, startTime: '09:00', endTime: '15:00', minEmployees: 4, employees: ['Arthur', 'Ângelo'] },
+      { id: 103, startTime: '13:00', endTime: '18:00', minEmployees: 4, employees: [] },
+      { id: 104, startTime: '14:00', endTime: '20:00', minEmployees: 5, employees: [] },
+  ],
+  sunday: []
 };
 
 const week = {
