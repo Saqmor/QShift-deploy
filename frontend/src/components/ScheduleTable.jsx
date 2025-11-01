@@ -1,20 +1,50 @@
-import React from 'react';
 import { useState } from 'react';
+import { X } from 'lucide-react';
 
-function EmployeeSelector() {
+function EmployeeSelector({
+  day,
+  slot,
+  assignedEmployees,
+  employeeList,
+  onToggleEmployee,
+  onClose,
+
+}) {
   return (
-    <div className='fixed inset-0'>
-      <p>Employee Selector Placeholder</p>
+    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+      <div className='bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full border border-slate-700'>
+        <div className='flex items-center justify-between mb-4'>
+          <h3 className='text-xl font-bold text-slate-200'>Select Employees</h3>
+          <button
+          onClick={onClose}
+          className="text-slate-400 hover:text-white transition-colors">
+            <X size={24} />
+          </button>
+        </div>
+        <div>
+
+        </div>
+        <button
+          onClick={onClose}
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        >
+          Finish
+        </button>
+      </div>
     </div>
   );
 }
 
 
 function ScheduleTable({
-    scheduleData, 
+    scheduleData,
+    setScheduleData,
+    employeeList,
     week,
     editMode
 }) {
+    const [showEmployeeSelector, setShowEmployeeSelector] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState(null);
     const days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const maxSlots = Math.max(...days_of_week.map(day => scheduleData[day].length));
     const selecetedDaysMap = {};
@@ -26,7 +56,39 @@ function ScheduleTable({
         ? index + week.startDateWeek.getDate()
         : index + week.startDateWeek.getDate() - lastDay.getDate();
     });
+    function handleEmployeeSelector(slot, day) {
+      setShowEmployeeSelector(true);
+      setSelectedSlot({ slot, day });
+    };
+
+    function onToggleEmployee(employee, slot, day) {
+      setScheduleData(data => {
+        const newData = {...data};
+        const dayData = {...newData[day]};
+        const assignments = {...slot.employees}
+
+
+        index = assignments.indexOf(employee);
+        if (index > -1) {
+          assignments.splice(index, 1)
+        } else {
+          assignments.push(employee)
+        };
+
+        let slotId;
+        dayData.forEach(slt => {
+          if (slt.id === slot.id) {
+            slotId = slot.id;
+          }
+        })
+        dayData[slotId].employees = assignments;
+        newData[day] = dayData;
+        return newData;
+      })
+    };
+
     return (
+      <div>
         <div className="bg-slate-800 rounded-lg overflow-hidden border border-slate-700 shadow-xl">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -74,7 +136,7 @@ function ScheduleTable({
                                 )}
                             </td>
                             <td
-                            onClick={() => slot && editMode && EmployeeSelector()}
+                            onClick={() => slot && editMode && handleEmployeeSelector(slot, day)}
                             className={`px-2 py-3 border-r border-slate-600 last:border-r-0 
                               ${editMode && slot ? 'cursor-pointer hover:bg-slate-700' : ''} 
                               ${isUnderStaffed ? 'bg-red-900 bg-opacity-50' : ''}`}
@@ -109,7 +171,21 @@ function ScheduleTable({
             </table>
           </div>
         </div>
-    )
+        {showEmployeeSelector && 
+          <EmployeeSelector
+            day={selectedSlot.day}
+            slot={selectedSlot.slot}
+            assignedEmployees={selectedSlot.slot.employees}
+            employeeList={employeeList}
+            onToggleEmployee={onToggleEmployee}
+            onClose={() => {
+              setShowEmployeeSelector(false);
+              setSelectedSlot(null);
+            }}
+          />}
+      </div>
+
+    );
 }
 
 export default ScheduleTable;

@@ -4,6 +4,7 @@ import ScheduleTable from '../components/ScheduleTable';
 import { useState } from 'react';
 
 // DADOS MOCKADOS
+const MOCK_EMPLOYEES = ['Arthur', 'Artur', 'Gabriel', 'Guilherme', 'Ângelo', 'Mariana', 'Larissa', 'Beatriz'];
 const INITIAL_SCHEDULE = {
   // Cada dia tem seus próprios horários
   monday: [
@@ -53,7 +54,9 @@ const week = {
 }
 
 function GeneratedSchedule({onPageChange}) {
+    // TODO: Substituir pelos dados reais da API
     const [scheduleData, setScheduleData] = useState(INITIAL_SCHEDULE);
+    const [employeeList, setEmployeeList] = useState(MOCK_EMPLOYEES);
     const [editMode, setEditMode] = useState(false);
 
     function handleCancel() {
@@ -79,6 +82,8 @@ function GeneratedSchedule({onPageChange}) {
             <div className="p-3">
                 <ScheduleTable
                     scheduleData={scheduleData}
+                    setScheduleData={setScheduleData}
+                    employeeList={employeeList}
                     week={week}
                     editMode={editMode}
                 />
