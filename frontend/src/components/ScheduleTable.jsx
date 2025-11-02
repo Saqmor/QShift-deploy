@@ -30,7 +30,7 @@ function EmployeeSelector({
         </div>
         <div className='space-y-2 max-h-96 overflow-y-auto mb-6'>
           {employeeList.map(emp => {
-            const isSelected = assignedEmployees.includes(emp);
+            const isSelected = assignedEmployees.some(assignedEmp => assignedEmp.id === emp.id);
             return (
               <button
                 onClick={() => onToggleEmployee(emp)}
@@ -39,7 +39,7 @@ function EmployeeSelector({
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
               >
                 <div className='flex items-center justify-between'>
-                  <span className='font-medium'>{emp}</span>
+                  <span className='font-medium'>{emp.name}</span>
                   {isSelected && <Check size={20}/>}
                 </div>
               </button>
@@ -89,19 +89,15 @@ function ScheduleTable({
             const dayData = [...newData[day]];
             
             newData[day] = dayData.map(slt => {
-                if (slt.id === slot.id) {
-                    const employees = [...slt.employees];
-                    const index = employees.indexOf(employee);
-                    
-                    if (index > -1) {
-                        employees.splice(index, 1);
-                    } else {
-                        employees.push(employee);
-                    }
+              if (slt.id === slot.id) {
+                const isSelected = slt.employees.some(emp => emp.id === employee.id);
+                const updatedEmployees = isSelected
+                  ? slt.employees.filter(emp => emp.id !== employee.id)
+                  : [...slt.employees, employee];
 
-                    return { ...slt, employees };
-                }
-                return slt;
+                return { ...slt, employees: updatedEmployees };
+              }
+              return slt;
             });
             
             return newData;
@@ -171,7 +167,7 @@ function ScheduleTable({
                                         key={i}
                                         className="px-2 py-1.5 bg-blue-600/50 text-white text-xs rounded text-center font-medium"
                                         >
-                                        {emp}
+                                        {emp.name}
                                         </div>
                                     ))
                                     ) : (

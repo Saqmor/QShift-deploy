@@ -4,20 +4,20 @@ import ScheduleTable from '../components/ScheduleTable';
 import { useState } from 'react';
 
 // DADOS MOCKADOS
-const MOCK_EMPLOYEES = ['Arthur', 'Artur', 'Gabriel', 'Guilherme', 'Ângelo', 'Mariana', 'Larissa', 'Beatriz'];
+const MOCK_EMPLOYEES = [{id: 4, name: 'Arthur'}, {id: 2, name: 'Artur'}, {id: 3, name: 'Gabriel'}, {id: 1, name: 'Guilherme'}, {id: 5, name: 'Ângelo'}, {id: 6, name: 'Mariana'}, {id: 7, name: 'Larissa'}, {id: 8, name: 'Beatriz'}];
 const INITIAL_SCHEDULE = {
   // Cada dia tem seus próprios horários
   monday: [
-    { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: ['Gabriel'] },
-    { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: ['Artur', 'Guilherme'] },
+    { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: [{id: 3, name: 'Gabriel'}] },
+    { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: [{id: 2, name: 'Artur'}, {id: 1, name: 'Guilherme'}] },
     { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: [] },
-    { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: ['Arthur']},
+    { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: [{id: 4, name: 'Arthur'}]},
   ],
   tuesday: [
-    { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: ['Artur','Gabriel'] },
+    { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: [{id: 2, name: 'Artur'}, {id: 3, name: 'Gabriel'}] },
     { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: [] },
-    { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: ['Guilherme'] },
-    { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: ['Arthur','Ângelo'] },
+    { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: [{id: 1, name: 'Guilherme'}] },
+    { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: [{id: 4, name: 'Arthur'}, {id: 5, name: 'Ângelo'}] },
   ],
   wednesday: [
     { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: [] },
@@ -26,20 +26,20 @@ const INITIAL_SCHEDULE = {
     { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: [] },
   ],
   thursday: [
-      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: ['Guilherme', 'Ângelo']},
+      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: [{id: 1, name: 'Guilherme'}, {id: 5, name: 'Ângelo'}]},
       { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: [] },
-      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: ['Gabriel'] },
-      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: ['Arthur', 'Artur'] },
+      { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: [{id: 3, name: 'Gabriel'}] },
+      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: [{id: 4, name: 'Arthur'}, {id: 2, name: 'Artur'}] },
   ],
   friday: [
-      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: ['Arthur'] },
-      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: ['Guilherme', 'Gabriel'] },
+      { id: 1, startTime: '08:00', endTime: '11:00', minEmployees: 2, employees: [{id: 4, name: 'Arthur'}] },
+      { id: 2, startTime: '08:00', endTime: '12:00', minEmployees: 2, employees: [{id: 1, name: 'Guilherme'}, {id: 3, name: 'Gabriel'}] },
       { id: 3, startTime: '13:00', endTime: '18:00', minEmployees: 2, employees: [] },
-      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: ['Artur'] },
+      { id: 4, startTime: '14:00', endTime: '19:00', minEmployees: 3, employees: [{id: 2, name: 'Artur'}] },
   ],
   saturday: [
-      { id: 101, startTime: '09:00', endTime: '13:00', minEmployees: 3, employees: ['Gabriel', 'Artur', 'Guilherme'] },
-      { id: 102, startTime: '09:00', endTime: '15:00', minEmployees: 4, employees: ['Arthur', 'Ângelo'] },
+      { id: 101, startTime: '09:00', endTime: '13:00', minEmployees: 3, employees: [{id: 3, name: 'Gabriel'}, {id: 2, name: 'Artur'}, {id: 1, name: 'Guilherme'}] },
+      { id: 102, startTime: '09:00', endTime: '15:00', minEmployees: 4, employees: [{id: 4, name: 'Arthur'}, {id: 5, name: 'Ângelo'}] },
       { id: 103, startTime: '13:00', endTime: '18:00', minEmployees: 4, employees: [] },
       { id: 104, startTime: '14:00', endTime: '20:00', minEmployees: 5, employees: [] },
   ],
