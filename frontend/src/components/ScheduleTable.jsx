@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import React from 'react';
 
 function EmployeeSelector({
+  day,
+  slot,
   assignedEmployees,
   employeeList,
   onToggleEmployee,
@@ -20,17 +22,26 @@ function EmployeeSelector({
             <X size={24} />
           </button>
         </div>
-        <div>
+        <div className='text-sm text-slate-400 mb-4'>
+          {day} | {slot.startTime} - {slot.endTime}
+          <span className='ml-2 text-slate-500'>
+            ({assignedEmployees.length}/{slot.minEmployees} employees)
+          </span>
+        </div>
+        <div className='space-y-2 max-h-96 overflow-y-auto mb-6'>
           {employeeList.map(emp => {
             const isSelected = assignedEmployees.includes(emp);
             return (
               <button
                 onClick={() => onToggleEmployee(emp)}
-                className={`w-full px-4 py-2 ${isSelected 
+                className={`w-full px-4 py-3 rounded-lg text-left transition-all ${isSelected 
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
               >
-                {emp}
+                <div className='flex items-center justify-between'>
+                  <span className='font-medium'>{emp}</span>
+                  {isSelected && <Check size={20}/>}
+                </div>
               </button>
             );
           })}
@@ -183,6 +194,8 @@ function ScheduleTable({
         </div>
         {showEmployeeSelector && selectedSlot && (
           <EmployeeSelector
+            day={selectedSlot.day}
+            slot={selectedSlot.slot}
             assignedEmployees={
                 scheduleData[selectedSlot.day]
                     .find(slt => slt.id === selectedSlot.slot.id)
