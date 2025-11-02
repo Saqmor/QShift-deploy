@@ -3,8 +3,6 @@ import { X } from 'lucide-react';
 import React from 'react';
 
 function EmployeeSelector({
-  day,
-  slot,
   assignedEmployees,
   employeeList,
   onToggleEmployee,
@@ -23,20 +21,17 @@ function EmployeeSelector({
           </button>
         </div>
         <div>
-          {/*TODO: o botão do funcionário não está atualizando o estilo do botão*/}
           {employeeList.map(emp => {
             const isSelected = assignedEmployees.includes(emp);
             return (
-              <React.Fragment key={day}>
-                <button
-                  onClick={() => onToggleEmployee(emp, slot, day)}
-                  className={`w-full px-4 py-2 ${isSelected 
-                    ? 'bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium'
-                    : 'bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium'}`}
-                >
-                  {emp}
-                </button>
-              </React.Fragment>
+              <button
+                onClick={() => onToggleEmployee(emp)}
+                className={`w-full px-4 py-2 ${isSelected 
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+              >
+                {emp}
+              </button>
             );
           })}
         </div>
@@ -92,7 +87,7 @@ function ScheduleTable({
                     } else {
                         employees.push(employee);
                     }
-                    
+
                     return { ...slt, employees };
                 }
                 return slt;
@@ -188,9 +183,11 @@ function ScheduleTable({
         </div>
         {showEmployeeSelector && selectedSlot && (
           <EmployeeSelector
-            day={selectedSlot.day}
-            slot={selectedSlot.slot}
-            assignedEmployees={selectedSlot.slot.employees}
+            assignedEmployees={
+                scheduleData[selectedSlot.day]
+                    .find(slt => slt.id === selectedSlot.slot.id)
+                    ?.employees || []
+            }
             employeeList={employeeList}
             onToggleEmployee={(emp) => onToggleEmployee(emp, selectedSlot.slot, selectedSlot.day)}
             onClose={() => {
