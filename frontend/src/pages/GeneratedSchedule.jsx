@@ -1,7 +1,8 @@
 import BaseLayout from '../layouts/BaseLayout';
 import Header from '../components/Header';
 import ScheduleTable from '../components/ScheduleTable';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import {GeneratedScheduleApi} from '../services/api.js'
 
 // DADOS MOCKADOS
 const MOCK_EMPLOYEES = [{id: 4, name: 'Arthur'}, {id: 2, name: 'Artur'}, {id: 3, name: 'Gabriel'}, {id: 1, name: 'Guilherme'}, {id: 5, name: 'Ângelo'}, {id: 6, name: 'Mariana'}, {id: 7, name: 'Larissa'}, {id: 8, name: 'Beatriz'}];
@@ -45,6 +46,16 @@ const INITIAL_SCHEDULE = {
   ],
   sunday: []
 };
+const INITIAL_SCHEDULE2 = {
+  monday: [{ id: null, startTime: '', endTime: '', minEmployees: null, employees: [] }],
+  tuesday: [{ id: null, startTime: '', endTime: '', minEmployees: null, employees: [] }],
+  wednesday: [{ id: null, startTime: '', endTime: '', minEmployees: null, employees: [] }],
+  thursday: [{ id: null, startTime: '', endTime: '', minEmployees: null, employees: [] }],
+  friday: [{ id: null, startTime: '', endTime: '', minEmployees: null, employees: [] }],
+  saturday: [{ id: null, startTime: '', endTime: '', minEmployees: null, employees: [] }],
+  sunday: [{ id: null, startTime: '', endTime: '', minEmployees: null, employees: [] }],
+};
+
 
 const week = {
   id: 5,
@@ -54,10 +65,32 @@ const week = {
 }
 
 function GeneratedSchedule({onPageChange}) {
-    // TODO: Substituir pelos dados reais da API
-    const [scheduleData, setScheduleData] = useState(INITIAL_SCHEDULE);
-    const [employeeList, setEmployeeList] = useState(MOCK_EMPLOYEES);
+    const [scheduleData, setScheduleData] = useState(INITIAL_SCHEDULE2);
+    const [employeeList, setEmployeeList] = useState([]);
     const [editMode, setEditMode] = useState(false);
+
+    useEffect(() => {
+    async function fetchData() {
+        try {
+        const [employeesResponse, scheduleResponse] = await Promise.all([
+            GeneratedScheduleApi.getEmployees(),
+            GeneratedScheduleApi.getGeneratedSchedule(),
+        ]);
+
+        setEmployeeList(employeesResponse.data);
+        setScheduleData(scheduleResponse.data);
+
+        console.log('Fetched employees:', employeesResponse.data);
+        console.log('Fetched schedule:', scheduleResponse.data);
+        } catch (error) {
+        console.error('Erro ao carregar dados da API:', error);
+        setEmployeeList(MOCK_EMPLOYEES);
+        setScheduleData(INITIAL_SCHEDULE);
+        }
+    }
+
+    fetchData();
+    }, []);
 
     function handleCancel() {
         onPageChange(1);
@@ -68,11 +101,15 @@ function GeneratedSchedule({onPageChange}) {
         onPageChange(7);
     };
 
-    function handleApproved() {
-        // Lógica para aprovar a escala
-        alert("Schedule approved!");
+    async function handleApproved() {
+    try {
+        const response = await GeneratedScheduleApi.approvedSchedule(scheduleData);
+        console.log('Escala criada com sucesso:', response.data);
         onPageChange(1);
-    };
+    } catch (error) {
+        console.error('Erro ao aprovar a escala:', error);
+    }};
+
     return (
         <BaseLayout
             showSidebar={false}

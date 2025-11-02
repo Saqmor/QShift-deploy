@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, Save, X } from 'lucide-react';
 import BaseLayout from '../layouts/BaseLayout.jsx';
 import Header from '../components/Header.jsx';
@@ -293,11 +293,6 @@ function AvailabilityPage({
     selectEditEmployee,
     setSelectEditEmployee
 }) {
-    // const employeeData = selectEditEmployee ? AvailabilityApi.getEmployee(selectEditEmployee) : null;
-    const employeeData = selectEditEmployee ? employeesData[selectEditEmployee] : null;
-    const [name, setName] = useState(employeeData?.name || '');
-    const [isActive, setIsActive] = useState(employeeData?.active ?? true);
-
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
 
@@ -311,9 +306,29 @@ function AvailabilityPage({
       });
       return initial;
     }
-
+    const [employeeData, setEmployeeData] = useState(null);
     //matriz(7x24) de disponibilidade false = indisponível, true = disponível. Se for para editar é necessário receber essa matriz de disponibilidade do backend
-    const [availability, setAvailability] = useState(() =>  employeeData ? employeeData.availability : initializeAvailability())
+    const [availability, setAvailability] = useState(() => initializeAvailability())
+    useEffect(() => {
+      if (!selectEditEmployee) return;
+
+      async function fetchEmployee() {
+        try {
+          const data = await AvailabilityApi.getEmployee(selectEditEmployee);
+          setEmployeeData(data);
+          setAvailability(employeeData.availability);
+        } catch (err) {
+          console.error(err);
+          setEmployeeData(employeesData[selectEditEmployee]);
+          setAvailability(employeeData.availability);
+        }
+      }
+
+      fetchEmployee();
+    }, [selectEditEmployee]);
+    //const employeeData = selectEditEmployee ? employeesData[selectEditEmployee] : null;
+    // const [name, setName] = useState(employeeData?.name || '');
+    // const [isActive, setIsActive] = useState(employeeData?.active ?? true);
 
     const [isMouseDown, setIsMouseDown] = useState(false);
     const [paintMode, setPaintMode] = useState(true); // true = pintar verde, false = pintar vermelho
@@ -348,14 +363,14 @@ function AvailabilityPage({
     const handleSave = () => {
         if (selectEditEmployee) {
           AvailabilityApi.updateEmployee(selectEditEmployee, availability );
-          console.log('Funcionário atualizado:', {id: selectEditEmployee, name, active: isActive, availability});
+          console.log('Funcionário atualizado:', {id: selectEditEmployee, name: employeeData?.name || '', active: employeeData?.active ?? true, availability});
         } else {
           // criar um newEmployeeId
           const newEmployeeId = Date.now();
           const Data = {
             id: newEmployeeId,
-            name,
-            active: isActive,
+            name: employeeData.name,
+            active: employeeData?.active ?? true,
             availability
           };
           AvailabilityApi.addNewEmployee(Data);
@@ -387,7 +402,7 @@ function AvailabilityPage({
               </label>
               <input
                 type="text"
-                value={name}
+                value={employeeData?.name || ''}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter the name..."
                 className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
@@ -400,11 +415,11 @@ function AvailabilityPage({
               <div className="relative">
                 <input
                   type="checkbox"
-                  checked={isActive}
-                  onChange={() => setIsActive(!isActive)}
+                  checked={employeeData?.active ?? true}
+                  onChange={() => setIsActive(!(employeeData?.active ?? true))}
                   className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-900 checked:bg-indigo-600 checked:border-indigo-600 cursor-pointer transition-colors"
                 />
-                {isActive && (
+                {(employeeData?.active ?? true) && (
                   <svg
                     className="absolute top-0.5 left-0.5 w-4 h-4 text-white pointer-events-none"
                     fill="none"
@@ -415,8 +430,8 @@ function AvailabilityPage({
                   </svg>
                 )}
               </div>
-              <span className={`text-sm font-medium ${isActive ? 'text-green-400' : 'text-slate-500'}`}>
-                {isActive ? 'Active Employee' : 'Inactive Employee'}
+              <span className={`text-sm font-medium ${(employeeData?.active ?? true) ? 'text-green-400' : 'text-slate-500'}`}>
+                {(employeeData?.active ?? true) ? 'Active Employee' : 'Inactive Employee'}
               </span>
             </label>
           </div>
@@ -477,7 +492,7 @@ function AvailabilityPage({
           </button>
           <button
             onClick={handleSave}
-            disabled={!name.trim()}
+            disabled={!(employeeData?.name || '').trim()}
             className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
