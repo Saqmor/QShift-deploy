@@ -82,28 +82,34 @@ function AvailabilityPage({
     };
 
     const handleAvaibilitySchemas = (employeeId) => {
-      const SlotsDay = [
-        [
-          { id: 1, startTime: '08:00', endTime: '12:00' },
-          { id: 2, startTime: '13:00', endTime: '18:00' }
-        ],
-        [
-          { id: 3, startTime: '08:00', endTime: '12:00' }
-        ],
-        [
-          { id: 4, startTime: '08:00', endTime: '12:00' }
-        ],
-        [
-          { id: 5, startTime: '08:00', endTime: '12:00' }
-        ],
-        [
-          { id: 6, startTime: '08:00', endTime: '12:00' }
-        ],
-        [
-          { id: 7, startTime: '09:00', endTime: '13:00' }
-        ],
-        []
-      ];
+      const SlotsDay = [];
+      days.forEach((day, index) => {
+        let slotsActive = [];
+        let slotPrevious = false;
+        const daySlots = availability[day];
+        SlotsDay[index] = [];
+        Object.entries(daySlots).forEach(([hourLabel, slot]) => {
+          if (slot) {
+            // essa hora é um elemento  de const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`); ou seja é tipo '12:00' mas eu quero apenas um int 12
+            slotsActive.push(hourLabel);
+          } else if (!slot && slotPrevious) {
+            SlotsDay[index].push({
+              id: crypto.randomUUID(),
+              startTime: slotsActive[0],
+              endTime: hourLabel
+            });
+            slotsActive = [];
+          }
+          slotPrevious = slot;
+        });
+        if (slotPrevious && slotsActive.length > 0) {
+            SlotsDay[index].push({
+              id: crypto.randomUUID(),
+              startTime: slotsActive[0],
+              endTime: '24:00'
+            });
+        }
+      })
       const availabilitySchemas = [];
       SlotsDay.forEach((schemas, day) => {
         availabilitySchemas[day]=[];
