@@ -18,7 +18,7 @@ class AvailabilityBase(BaseModel):
 
 
 class AvailabilityCreate(AvailabilityBase):
-    employee_id: uuid.UUID = Field(..., description="Employee who is available")
+    pass
 
 
 class AvailabilityUpdate(BaseModel):
