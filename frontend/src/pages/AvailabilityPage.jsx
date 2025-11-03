@@ -77,6 +77,48 @@ function AvailabilityPage({
         }));
     };
     
+    const handleCancel = () => {
+        onPageChange(1);
+    };
+
+    const handleAvaibilitySchemas = () => {
+      const SlotsDay = {
+        monday: [
+          {id: 1, startTime: 2, endTime:3}
+        ],
+        tuesday: [
+          {id: 2, startTime: 2, endTime:3}
+        ],
+        wednesday: [
+          {id: 3, startTime: 2, endTime:3}
+        ],
+        thirsday: [
+          {id: 4, startTime: 2, endTime:3}
+        ],
+        friday: [
+          {id: 5, startTime: 2, endTime:3}
+        ],
+        saturday: [
+          {id: 6, startTime: 2, endTime:3}
+        ],
+        sunday: [
+          {id: 7, startTime: 2, endTime:3}
+        ]
+      }
+      const availabilitySchemas = days.map(day => ({
+          ...availabilitySchemas, 
+            [day] : SlotsDay[day].map(slot => ({
+              ...slot,
+              id: employee_id,
+              weekday: day,
+              startTime: slot.startTime,
+              endTime: slot.endTime
+          }))
+      }))
+
+      return availabilitySchemas;
+    }
+
     const handleSave = () => {
         if (selectEditEmployee) {
           AvailabilityApi.updateEmployee(selectEditEmployee, availability );
@@ -96,9 +138,7 @@ function AvailabilityPage({
         onPageChange(1);
     };
     
-    const handleCancel = () => {
-        onPageChange(1);
-    };
+
 
   return (
     <BaseLayout 
