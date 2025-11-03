@@ -71,6 +71,8 @@ function App() {
       onPageChange={setCurrentPage}
       selectEditEmployee={selectEditEmployee}
       setSelectEditEmplyee={setSelectEditEmployee}
+      isLoading={isLoading}
+      setIsLoading={setIsLoading}
     />,
     <ShiftConfigPage 
       onPageChange={setCurrentPage}

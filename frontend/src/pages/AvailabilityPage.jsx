@@ -8,157 +8,167 @@ import { employeesAvaibility } from '../MockData.js';
 function AvailabilityPage({
     onPageChange,
     selectEditEmployee,
-    setSelectEditEmployee
+    setSelectEditEmployee,
+    isLoading,
+    setIsLoading
 }) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+  const [name, setName] = useState(selectEditEmployee?.name || '');
+  const [isActive, setIsActive] = useState(selectEditEmployee?.active ?? true);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [paintMode, setPaintMode] = useState(true);
 
-    const initializeAvailability = () => {
-      const initial = {};
-      days.forEach(day => {
-        initial[day] = {};
-        hours.forEach(hour => {
-          initial[day][hour] = false;          
-        });
+  const initializeAvailability = () => {
+    const initial = {};
+    days.forEach(day => {
+      initial[day] = {};
+      hours.forEach(hour => {
+        initial[day][hour] = false;          
       });
-      return initial;
-    }
-    const [employeeData, setEmployeeData] = useState(null);
-    //matriz(7x24) de disponibilidade false = indisponível, true = disponível. Se for para editar é necessário receber essa matriz de disponibilidade do backend
-    const [availability, setAvailability] = useState(() => initializeAvailability())
-    useEffect(() => {
-      if (!selectEditEmployee) return;
+    });
+    return initial;
+  }
+  //matriz(7x24) de disponibilidade false = indisponível, true = disponível. Se for para editar é necessário receber essa matriz de disponibilidade do backend
+  const [availability, setAvailability] = useState(() => initializeAvailability())
 
-      async function fetchEmployee() {
-        try {
-          const data = await AvailabilityApi.getEmployee(selectEditEmployee);
-          setEmployeeData(data);
-          setAvailability(employeeData.availability);
-        } catch (err) {
-          console.error(err);
-          setEmployeeData(employeesAvaibility[selectEditEmployee]);
-          setAvailability(employeesAvaibility[selectEditEmployee].availability);
-        }
+  //TODO: usar esse useEffect para pegar a disponibilidade, vou ter que fazer uma iteração de requisiçõe pra conseguir montar a tabela
+  useEffect(() => {
+    if (!selectEditEmployee.id) return;
+    setIsLoading(true);
+    async function fetchEmployee() {
+      try {
+        const data = await AvailabilityApi.getEmployee(selectEditEmployee.id);
+        setAvailability(employeesAvaibility[selectEditEmployee.id].availability);
+      } catch (err) {
+        console.error(err);
+        setAvailability(employeesAvaibility[selectEditEmployee.id].availability);
+      } finally {
+      setIsLoading(false);
+      console.log('mudando loading', isLoading);
       }
-
-      fetchEmployee();
-    }, [selectEditEmployee]);
-    //const employeeData = selectEditEmployee ? employeesData[selectEditEmployee] : null;
-    const [name, setName] = useState(employeeData?.name || '');
-    const [isActive, setIsActive] = useState(employeeData?.active ?? true);
-
-    const [isMouseDown, setIsMouseDown] = useState(false);
-    const [paintMode, setPaintMode] = useState(true); // true = pintar verde, false = pintar vermelho
-
-    const handleMouseDown = (day, hour) => {
-        setIsMouseDown(true);
-        const newValue = !availability[day][hour];
-        setPaintMode(newValue);
-        toggleCell(day, hour, newValue);
-    };
-    
-    const handleMouseEnter = (day, hour) => {
-        if (isMouseDown) {
-        toggleCell(day, hour, paintMode);
-        }
-    };
-    
-    const handleMouseUp = () => {
-        setIsMouseDown(false);
-    };
-    
-    const toggleCell = (day, hour, value) => {
-        setAvailability(prev => ({
-        ...prev,
-        [day]: {
-            ...prev[day],
-            [hour]: value
-        }
-        }));
-    };
-    
-    const handleCancel = () => {
-        onPageChange(1);
-    };
-
-    const handleAvaibilitySchemas = (employeeId) => {
-      const SlotsDay = [];
-      days.forEach((day, index) => {
-        let slotsActive = [];
-        let slotPrevious = false;
-        const daySlots = availability[day];
-        SlotsDay[index] = [];
-        Object.entries(daySlots).forEach(([hourLabel, slot]) => {
-          const hour = `${hourLabel}:00`;
-          if (slot) {
-            slotsActive.push(hour);
-          } else if (!slot && slotPrevious) {
-            SlotsDay[index].push({
-              id: crypto.randomUUID(),
-              startTime: slotsActive[0],
-              endTime: hour
-            });
-            slotsActive = [];
-          }
-          slotPrevious = slot;
-        });
-        if (slotPrevious && slotsActive.length > 0) {
-            SlotsDay[index].push({
-              id: crypto.randomUUID(),
-              startTime: slotsActive[0],
-              endTime: '24:00:00'
-            });
-        }
-      })
-      const availabilitySchemas = [];
-      SlotsDay.forEach((schemas, day) => {
-        availabilitySchemas[day]=[];
-        schemas.forEach((slot, index) => {
-          availabilitySchemas[day][index] = {
-            id: slot.id,
-            employeeId,
-            weekday: day,
-            startTime: slot.startTime,
-            endTime: slot.endTime
-          }
-        })
-      })
-
-      return availabilitySchemas;
     }
+    fetchEmployee();
+  }, [selectEditEmployee.id]);
+  //const employeeData = selectEditEmployee ? employeesData[selectEditEmployee] : null;
 
-    const handleSave = () => {
-        if (selectEditEmployee) {
-          const availabilitySchemas = handleAvaibilitySchemas(selectEditEmployee);
-          console.log('days:', days);
-          console.log('availabilitySchemas:', availabilitySchemas);
-          days.map((day, index) => {
-            availabilitySchemas[index].map(schema => {
-              AvailabilityApi.updateEmployeeAvailability(selectEditEmployee, schema );
-              console.log('Funcionário atualizado:', {id: selectEditEmployee, name: name, active: isActive, schema});
-            })
-          })
-        } else {
-          const newEmployeeId = Date.now();
-          const availabilitySchemas = handleAvaibilitySchemas(newEmployeeId);
-          const Data = {
-            id: newEmployeeId,
-            name: employeeData.name,
-            active: isActive,
-          };
-          AvailabilityApi.addNewEmployee(Data);
-          console.log('Novo funcionário adicionado:', Data);
-          days.map((day, index) => {
-            availabilitySchemas[index].map(schema => {
-              AvailabilityApi.updateEmployee(newEmployeeId, schema );
-              console.log('Funcionário atualizado:', {id: selectEditEmployee, name: name, active: isActive, schema});
-            })
-          })
+
+  const handleMouseDown = (day, hour) => {
+      setIsMouseDown(true);
+      const newValue = !availability[day][hour];
+      setPaintMode(newValue);
+      toggleCell(day, hour, newValue);
+  };
+  
+  const handleMouseEnter = (day, hour) => {
+      if (isMouseDown) {
+      toggleCell(day, hour, paintMode);
+      }
+  };
+  
+  const handleMouseUp = () => {
+      setIsMouseDown(false);
+  };
+  
+  const toggleCell = (day, hour, value) => {
+      setAvailability(prev => ({
+      ...prev,
+      [day]: {
+          ...prev[day],
+          [hour]: value
+      }
+      }));
+  };
+  
+  const handleCancel = () => {
+      onPageChange(1);
+  };
+
+  const handleAvaibilitySchemas = () => {
+    const SlotsDay = [];
+    days.forEach((day, index) => {
+      let slotsActive = [];
+      let slotPrevious = false;
+      const daySlots = availability[day];
+      SlotsDay[index] = [];
+      Object.entries(daySlots).forEach(([hourLabel, slot]) => {
+        const hour = `${hourLabel}:00`;
+        if (slot) {
+          slotsActive.push(hour);
+        } else if (!slot && slotPrevious) {
+          SlotsDay[index].push({
+            startTime: slotsActive[0],
+            endTime: hour
+          });
+          slotsActive = [];
         }
-        onPageChange(1);
-    };
-    
+        slotPrevious = slot;
+      });
+      if (slotPrevious && slotsActive.length > 0) {
+          SlotsDay[index].push({
+            startTime: slotsActive[0],
+            endTime: '24:00:00'
+          });
+      }
+    })
+    const availabilitySchemas = [];
+    SlotsDay.forEach((schemas, day) => {
+      availabilitySchemas[day]=[];
+      schemas.forEach((slot, index) => {
+        availabilitySchemas[day][index] = {
+          weekday: day,
+          startTime: slot.startTime,
+          endTime: slot.endTime
+        }
+      })
+    })
 
+    return availabilitySchemas;
+  }
+
+  const handleSave = async () => {
+      if (selectEditEmployee.id) {
+        const availabilitySchemas = handleAvaibilitySchemas();
+        console.log('days:', days);
+        console.log('availabilitySchemas:', availabilitySchemas);
+        days.map((day, index) => {
+          availabilitySchemas[index].map(schema => {
+            AvailabilityApi.updateEmployeeAvailability(selectEditEmployee.id, schema );
+            console.log('Funcionário atualizado:', {id: selectEditEmployee.id, name: name, active: isActive, schema});
+          })
+        })
+      } else {
+        const availabilitySchemas = handleAvaibilitySchemas();
+        const Data = {
+          name: name,
+          active: isActive,
+        };
+        console.log('Funcionário atualizado:', { name: name, active: isActive, availabilitySchemas})
+        const response = await AvailabilityApi.addNewEmployee(Data);
+        const newEmployeeId = response.data.id;
+        console.log('Novo funcionário adicionado:', Data);
+        days.map((day, index) => {
+          availabilitySchemas[index].map(schema => {
+            AvailabilityApi.addNewEmployee(newEmployeeId, schema );
+            console.log('Funcionário atualizado:', {id: newEmployeeId, name: name, active: isActive, schema});
+          })
+        })
+      }
+      onPageChange(1);
+  };
+    
+  if (isLoading) {
+      return (
+          <BaseLayout showSidebar={false} currentPage={5} onPageChange={onPageChange}>
+              <div className="flex items-center justify-center min-h-screen">
+                  <div className="text-center">
+                      <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-slate-400">Loading...</p>
+                  </div>
+              </div>
+          </BaseLayout>
+      );
+  }
 
   return (
     <BaseLayout 
@@ -269,7 +279,7 @@ function AvailabilityPage({
           </button>
           <button
             onClick={handleSave}
-            disabled={!(employeeData?.name || '').trim()}
+            disabled={!(name).trim()}
             className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <Save className="w-4 h-4" />

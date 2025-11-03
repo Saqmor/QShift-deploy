@@ -20,11 +20,15 @@ function StaffPage({
   };
 
   const handleEditEmployee = (employeeId) => {
-      console.log('Edit employee:', employeeId);
-      setSelectEditEmployee(employeeId);
+    const emp = employeesData.find(e => e.id === employeeId);
+    if (emp) {
+      console.log('entrou', emp);
+      setSelectEditEmployee(emp);
       onPageChange(5);
-  }
-
+    } else {
+      console.warn('Funcionário não encontrado:', employeeId);
+    }
+  };
   const handleToggleActive = async (employeeId, currentStatus) => {
       StaffApi.toggleActive(employeeId, !currentStatus);
       setEmployees(employees.map(emp => 

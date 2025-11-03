@@ -20,7 +20,7 @@ api.interceptors.request.use(config => {
 
 export const ShiftConfigApi = {
     createShcedule: async (schedule) => {
-        return await api.post('/create-schedule', {schedule});
+        return await api.post('/create-schedule', schedule);
     }
 };
 
@@ -44,13 +44,12 @@ export const AvailabilityApi = {
     },
 
     updateEmployeeAvailability: async (employeeId, availability) => {
-        return await api.put(`/availability/${employeeId}`, { availability });
+        return await api.put(`/availability/${employeeId}`, availability );
     },
 
     addNewEmployee: async (employeeData) => {
-        return await api.post('/employees', {employeeData});
+        return await api.post('/employees', employeeData);
     }
-    // TODO:passa um ID
 }
 
 export const GeneratedScheduleApi = {
@@ -61,6 +60,6 @@ export const GeneratedScheduleApi = {
         return await api.get('/schedule');
     },
     approvedSchedule: async (schedule) => {
-        return await api.post('/schedule', {schedule});
+        return await api.post('/schedule', schedule);
     }
 }
