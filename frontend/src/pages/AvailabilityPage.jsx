@@ -44,8 +44,8 @@ function AvailabilityPage({
       fetchEmployee();
     }, [selectEditEmployee]);
     //const employeeData = selectEditEmployee ? employeesData[selectEditEmployee] : null;
-    // const [name, setName] = useState(employeeData?.name || '');
-    // const [isActive, setIsActive] = useState(employeeData?.active ?? true);
+    const [name, setName] = useState(employeeData?.name || '');
+    const [isActive, setIsActive] = useState(employeeData?.active ?? true);
 
     const [isMouseDown, setIsMouseDown] = useState(false);
     const [paintMode, setPaintMode] = useState(true); // true = pintar verde, false = pintar vermelho
@@ -135,7 +135,7 @@ function AvailabilityPage({
           days.map((day, index) => {
             availabilitySchemas[index].map(schema => {
               AvailabilityApi.updateEmployeeAvailability(selectEditEmployee, schema );
-              console.log('Funcionário atualizado:', {id: selectEditEmployee, name: employeeData?.name || '', active: employeeData?.active ?? true, schema});
+              console.log('Funcionário atualizado:', {id: selectEditEmployee, name: name, active: isActive, schema});
             })
           })
         } else {
@@ -144,14 +144,14 @@ function AvailabilityPage({
           const Data = {
             id: newEmployeeId,
             name: employeeData.name,
-            active: employeeData?.active ?? true,
+            active: isActive,
           };
           AvailabilityApi.addNewEmployee(Data);
           console.log('Novo funcionário adicionado:', Data);
           days.map((day, index) => {
             availabilitySchemas[index].map(schema => {
               AvailabilityApi.updateEmployee(newEmployeeId, schema );
-              console.log('Funcionário atualizado:', {id: selectEditEmployee, name: employeeData?.name || '', active: employeeData?.active ?? true, schema});
+              console.log('Funcionário atualizado:', {id: selectEditEmployee, name: name, active: isActive, schema});
             })
           })
         }
@@ -179,7 +179,7 @@ function AvailabilityPage({
               </label>
               <input
                 type="text"
-                value={employeeData?.name || ''}
+                value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter the name..."
                 className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
@@ -192,11 +192,11 @@ function AvailabilityPage({
               <div className="relative">
                 <input
                   type="checkbox"
-                  checked={employeeData?.active ?? true}
-                  onChange={() => setIsActive(!(employeeData?.active ?? true))}
+                  checked={isActive}
+                  onChange={() => setIsActive(!(isActive))}
                   className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-900 checked:bg-indigo-600 checked:border-indigo-600 cursor-pointer transition-colors"
                 />
-                {(employeeData?.active ?? true) && (
+                {(isActive) && (
                   <svg
                     className="absolute top-0.5 left-0.5 w-4 h-4 text-white pointer-events-none"
                     fill="none"
@@ -207,8 +207,8 @@ function AvailabilityPage({
                   </svg>
                 )}
               </div>
-              <span className={`text-sm font-medium ${(employeeData?.active ?? true) ? 'text-green-400' : 'text-slate-500'}`}>
-                {(employeeData?.active ?? true) ? 'Active Employee' : 'Inactive Employee'}
+              <span className={`text-sm font-medium ${(isActive) ? 'text-green-400' : 'text-slate-500'}`}>
+                {(isActive) ? 'Active Employee' : 'Inactive Employee'}
               </span>
             </label>
           </div>
