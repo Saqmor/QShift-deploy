@@ -33,16 +33,16 @@ function AvailabilityPage({
 
   const updateAvaibility = (schema) => {
     const startTime = parseInt(schema.startTime.split(':')[0]);
-    const endTime = parseInt(schema.startTime.split(':')[0]);
+    const endTime = parseInt(schema.endTime.split(':')[0]);
+    const weekday = days[schema.weekday];
     const slotsTime = Array.from({ length: endTime-startTime }, (_, i=startTime) => `${i.toString().padStart(2, '0')}:00:00`);
+    const updateSlots = {...availability[weekday]};
+    slotsTime.forEach(slot => {
+      updateSlots[slot] = true;
+    })
     setAvailability(prev => ({
       ...prev,
-      [days[schema.weekday]] : slotsTime.map(slot => {
-        return {
-          ...prev[days[schema.weekday]],
-          [slot] : true
-        }
-      })
+      [weekday] : updateSlots
     }));
   }
 
