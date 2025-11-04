@@ -1,9 +1,13 @@
 from fastapi import FastAPI
-from app.core.config import settings
-from app.core.db import engine
 from sqlalchemy import text
 
+from app.core.config import settings
+from app.core.db import engine
+from app.api import api_router
+
 app = FastAPI(title="QShift API")
+
+app.include_router(api_router)
 
 
 @app.get("/")
