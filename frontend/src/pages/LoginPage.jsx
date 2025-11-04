@@ -17,7 +17,7 @@ function LoginPage({
         if (username === DataBaseUser.username && password === DataBaseUser.password) {
             localStorage.setItem("user_id", DataBaseUser.user_id);
             onLoginSucess();
-            console.log('User logged in:', DataBaseUser);
+            console.log('User logged in:', DataBaseUser.username);
         }
         else {
             alert('Invalid username or password');

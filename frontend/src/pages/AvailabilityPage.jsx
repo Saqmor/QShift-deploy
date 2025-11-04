@@ -29,8 +29,22 @@ function AvailabilityPage({
     });
     return initial;
   }
-  //matriz(7x24) de disponibilidade false = indisponível, true = disponível. Se for para editar é necessário receber essa matriz de disponibilidade do backend
   const [availability, setAvailability] = useState(() => initializeAvailability())
+
+  const updateAvaibility = (schema) => {
+    const startTime = parseInt(schema.startTime.split(':')[0]);
+    const endTime = parseInt(schema.startTime.split(':')[0]);
+    const slotsTime = Array.from({ length: endTime-startTime }, (_, i=startTime) => `${i.toString().padStart(2, '0')}:00:00`);
+    setAvailability(prev => ({
+      ...prev,
+      [days[schema.weekday]] : slotsTime.map(slot => {
+        return {
+          ...prev[days[schema.weekday]],
+          [slot] : true
+        }
+      })
+    }));
+  }
 
   //TODO: usar esse useEffect para pegar a disponibilidade, vou ter que fazer uma iteração de requisiçõe pra conseguir montar a tabela
   useEffect(() => {
