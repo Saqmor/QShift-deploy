@@ -35,8 +35,8 @@ export const StaffApi = {
 };
 
 export const AvailabilityApi = {
-    getEmployee: async (employeeId) => {
-        return await api.get(`/employees/${employeeId}`);
+    getAvailabilityEmployee: async (employeeId) => {
+        return await api.get(`/employees/${employeeId}/availabilities`);
     },
 
     getByEmployeeId: async (employeeId) => {

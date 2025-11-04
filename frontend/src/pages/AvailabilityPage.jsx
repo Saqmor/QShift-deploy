@@ -46,14 +46,16 @@ function AvailabilityPage({
     }));
   }
 
-  //TODO: usar esse useEffect para pegar a disponibilidade, vou ter que fazer uma iteração de requisiçõe pra conseguir montar a tabela
   useEffect(() => {
     if (!selectEditEmployee?.id) return;
     setIsLoading(true);
     async function fetchEmployee() {
       try {
-        const data = await AvailabilityApi.getEmployee(selectEditEmployee.id);
-        setAvailability(employeesAvaibility[selectEditEmployee.id].availability);
+        const response = await AvailabilityApi.getAvailabilityEmployee(selectEditEmployee.id);
+        const ListSchemas = response.data;
+        ListSchemas.forEach(schema => {
+          updateAvaibility(schema);
+        })
       } catch (err) {
         console.error(err);
         setAvailability(employeesAvaibility[selectEditEmployee.id].availability);
@@ -64,8 +66,6 @@ function AvailabilityPage({
     }
     fetchEmployee();
   }, [selectEditEmployee?.id]);
-  //const employeeData = selectEditEmployee ? employeesData[selectEditEmployee] : null;
-
 
   const handleMouseDown = (day, hour) => {
       setIsMouseDown(true);
