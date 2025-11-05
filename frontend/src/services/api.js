@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { week } from '../MockData';
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
@@ -19,8 +20,12 @@ api.interceptors.request.use(config => {
 });
 
 export const ShiftConfigApi = {
-    createShcedule: async (schedule) => {
-        return await api.post('/create-schedule', schedule);
+    createShcedule: async (weekPath, shifts) => {
+        return await api.post(`${weekPath}/schedule`, shifts);
+    },
+
+    submitWeekData: async (week) => {
+        return await api.post('/weeks', week);
     }
 };
 
