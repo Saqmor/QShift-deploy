@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 import app.core.constants as constants
 
 class ScheduleOut(BaseModel):
-    week_id: uuid.UUID
     shifts: List[ScheduleShiftOut]
 
 class ScheduleShiftOut(BaseModel):
@@ -18,14 +17,13 @@ class ScheduleShiftOut(BaseModel):
     min_staff: int = Field(
         1, ge=1, description="Minimum amount of employees required for the shift"
     )
-    employees: List[ScheduleEmployeeOut]
+    employees: List[ScheduleShiftEmployeeOut]
 
-class ScheduleEmployeeOut(BaseModel):
+class ScheduleShiftEmployeeOut(BaseModel):
     employee_id: uuid.UUID
     name: str = Field(..., max_length=constants.MAX_EMPLOYEE_NAME_LENGTH, description="Employee's name")
 
 class ScheduleCreate(BaseModel):
-    week_id: uuid.UUID
     shifts: List[ScheduleShiftCreate]
 
 class ScheduleShiftCreate(BaseModel):
