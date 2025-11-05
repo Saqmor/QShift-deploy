@@ -23,7 +23,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handLoginSucess = async () => {
-    setIsLoading(true);
     try {
       const response = await StaffApi.getAll();
       setEmployees(response.data);

@@ -26,9 +26,8 @@ function LoginPage({
             }
             else {
                 alert('Invalid username or password');
+                setIsLoading(false);
             }
-        } finally {
-            setIsLoading(false);
         }
     };
 

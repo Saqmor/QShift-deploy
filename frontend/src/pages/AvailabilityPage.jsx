@@ -3,7 +3,7 @@ import { Calendar, Save, X } from 'lucide-react';
 import BaseLayout from '../layouts/BaseLayout.jsx';
 import Header from '../components/Header.jsx';
 import {AvailabilityApi} from '../services/api.js';
-import { employeesAvaibility } from '../MockData.js';
+import { employeesAvailability } from '../MockData.js';
 
 function AvailabilityPage({
     onPageChange,
@@ -31,37 +31,37 @@ function AvailabilityPage({
   }
   const [availability, setAvailability] = useState(() => initializeAvailability())
 
-  const updateAvaibility = (schema) => {
-    const startTime = parseInt(schema.startTime.split(':')[0]);
-    const endTime = parseInt(schema.endTime.split(':')[0]);
-    const weekday = days[schema.weekday];
-    const slotsTime = Array.from({ length: endTime-startTime }, (_, i=startTime) => `${i.toString().padStart(2, '0')}:00:00`);
-    const updateSlots = {...availability[weekday]};
-    slotsTime.forEach(slot => {
-      updateSlots[slot] = true;
-    })
-    setAvailability(prev => ({
-      ...prev,
-      [weekday] : updateSlots
-    }));
+  const updateAvaibility = (schemas) => {
+    const updateAvailability = initializeAvailability();
+    schemas.forEach(schema => {
+      let startTime = parseInt(schema.startTime.split(':')[0]);
+      const endTime = parseInt(schema.endTime.split(':')[0]);
+      const weekday = days[schema.weekday];
+      Array.from({ length: endTime-startTime }).forEach(() => {
+        const slotsTime = `${startTime.toString().padStart(2, '0')}:00`;
+        startTime = startTime + 1;
+        updateAvailability[weekday][slotsTime] = true;
+      });
+    });
+    setAvailability(updateAvailability);
   }
 
+
   useEffect(() => {
+
     if (!selectEditEmployee?.id) return;
-    setIsLoading(true);
+    setIsLoading(true);    
     async function fetchEmployee() {
       try {
         const response = await AvailabilityApi.getAvailabilityEmployee(selectEditEmployee.id);
         const ListSchemas = response.data;
-        ListSchemas.forEach(schema => {
-          updateAvaibility(schema);
-        })
+        updateAvaibility(ListSchemas);
       } catch (err) {
         console.error(err);
-        setAvailability(employeesAvaibility[selectEditEmployee.id].availability);
+        updateAvaibility(employeesAvailability[selectEditEmployee.id].availability);
       } finally {
       setIsLoading(false);
-      console.log('mudando loading', isLoading);
+      console.log('página carregada', isLoading);
       }
     }
     fetchEmployee();
