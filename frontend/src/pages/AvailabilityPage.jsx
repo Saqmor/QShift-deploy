@@ -34,12 +34,12 @@ function AvailabilityPage({
   const updateAvaibility = (schemas) => {
     const updateAvailability = initializeAvailability();
     schemas.forEach(schema => {
-      let startTime = parseInt(schema.startTime.split(':')[0]);
-      const endTime = parseInt(schema.endTime.split(':')[0]);
+      let start_time = parseInt(schema.start_time.split(':')[0]);
+      const end_time = parseInt(schema.end_time.split(':')[0]);
       const weekday = days[schema.weekday];
-      Array.from({ length: endTime-startTime }).forEach(() => {
-        const slotsTime = `${startTime.toString().padStart(2, '0')}:00`;
-        startTime = startTime + 1;
+      Array.from({ length: end_time-start_time }).forEach(() => {
+        const slotsTime = `${start_time.toString().padStart(2, '0')}:00`;
+        start_time = start_time + 1;
         updateAvailability[weekday][slotsTime] = true;
       });
     });
@@ -110,8 +110,8 @@ function AvailabilityPage({
           slotsActive.push(hour);
         } else if (!slot && slotPrevious) {
           SlotsDay[index].push({
-            startTime: slotsActive[0],
-            endTime: hour
+            start_time: slotsActive[0],
+            end_time: hour
           });
           slotsActive = [];
         }
@@ -119,8 +119,8 @@ function AvailabilityPage({
       });
       if (slotPrevious && slotsActive.length > 0) {
           SlotsDay[index].push({
-            startTime: slotsActive[0],
-            endTime: '24:00:00'
+            start_time: slotsActive[0],
+            end_time: '24:00:00'
           });
       }
     })
@@ -130,8 +130,8 @@ function AvailabilityPage({
       schemas.forEach((slot, index) => {
         availabilitySchemas[day][index] = {
           weekday: day,
-          startTime: slot.startTime,
-          endTime: slot.endTime
+          start_time: slot.start_time,
+          end_time: slot.end_time
         }
       })
     })
@@ -157,12 +157,13 @@ function AvailabilityPage({
           active: isActive,
         };
         console.log('Funcionário atualizado:', { name: name, active: isActive, availabilitySchemas})
+        console.log('employee', Data)
         const response = await AvailabilityApi.addNewEmployee(Data);
         const newEmployeeId = response.data.id;
         console.log('Novo funcionário adicionado:', Data);
         days.map((day, index) => {
           availabilitySchemas[index].map(schema => {
-            AvailabilityApi.addNewEmployee(newEmployeeId, schema );
+            AvailabilityApi.createEmployeeAvailability(newEmployeeId, schema );
             console.log('Funcionário atualizado:', {id: newEmployeeId, name: name, active: isActive, schema});
           })
         })

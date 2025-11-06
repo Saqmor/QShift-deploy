@@ -30,7 +30,7 @@ function App() {
 
     } catch (error) {
       console.error('Erro ao carregar funcionários');
-      setEmployees(employeesMock);
+      //setEmployees(employeesMock);
       setCurrentPage(1);
     } finally {
       setIsLoading(false);

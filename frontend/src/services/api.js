@@ -2,7 +2,7 @@ import axios from 'axios';
 import { week } from '../MockData';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: ' http://127.0.0.1:8000',
   timeout: 500,
   headers: {'Content-Type': 'application/json'}
 });
@@ -50,6 +50,21 @@ export const AvailabilityApi = {
 
     updateEmployeeAvailability: async (employeeId, availability) => {
         return await api.put(`/availability/${employeeId}`, availability );
+    },
+
+    createEmployeeAvailability: async (employeeId, availability) => {
+        try {
+        const response = await api.post(
+            `/employees/${employeeId}/availabilities`,
+            availability
+        );
+        return response.data;
+        } catch (error) {
+        console.error('Erro ao criar disponibilidade:', error);
+        console.error('Payload enviado:', availability);
+        console.error('Resposta:', error.response?.data);
+        throw error;
+        }
     },
 
     addNewEmployee: async (employeeData) => {
