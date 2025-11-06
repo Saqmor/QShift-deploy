@@ -36,11 +36,16 @@ function AvailabilityPage({
     const updateAvailability = initializeAvailability();
     schemas.forEach(schema => {
       let start_time = parseInt(schema.start_time.split(':')[0]);
-      const end_time = parseInt(schema.end_time.split(':')[0]);
+      let end_time = schema.end_time;
+      if (end_time === '23:59:59') {
+        end_time = 24;
+      } else {
+        end_time = parseInt(schema.end_time.split(':')[0])
+      }
       const weekday = days[schema.weekday];
       Array.from({ length: end_time-start_time }).forEach(() => {
         const slotsTime = `${start_time.toString().padStart(2, '0')}:00`;
-        start_time = start_time + 1;
+        start_time = start_time + 1;          
         updateAvailability[weekday][slotsTime] = true;
       });
     });
@@ -120,7 +125,7 @@ function AvailabilityPage({
       if (slotPrevious && slotsActive.length > 0) {
           SlotsDay[index].push({
             start_time: slotsActive[0],
-            end_time: '24:00:00'
+            end_time: '23:59:59'
           });
       }
     })
