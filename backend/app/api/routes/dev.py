@@ -1,5 +1,5 @@
 from __future__ import annotations
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from datetime import date, time, timedelta
 
@@ -11,10 +11,10 @@ router = APIRouter(prefix="/dev", tags=["dev"])
 
 
 def next_monday(d: date) -> date:
-    return d + timedelta(days=(7 - d.weekday()) % 7)
+    return d + timedelta(days=(7 - d.weekday()))
 
 
-@router.post("/seed")
+@router.post("/seed", status_code=status.HTTP_200_OK)
 def seed(db: Session = Depends(get_session), user_id=Depends(current_user_id)):
     """
     Populate (or ensure) consistent demo data for the current user.
@@ -49,6 +49,7 @@ def seed(db: Session = Depends(get_session), user_id=Depends(current_user_id)):
         names: list[str] = ["Artur", "Arthur", "Angelo", "Gabriel", "Guilherme"]
         for n in names:
             db.add(Employee(user_id=user_id, name=n, active=True))
+        db.flush()
 
         # 3) WEEK (next Monday; your schemas use open_days: List[int])
         start = next_monday(date.today())
