@@ -102,20 +102,20 @@ class ScheduleGenerator:
         db: Session,
         user_id: UUID,
         week_id: UUID,
-        shift_ids: List[UUID],
     ):
         employee_ids, employee_names = cls._get_employees_for_user(
             db=db, user_id=user_id
         )
+        shift_ids = cls._get_shift_ids_for_week(db=db, week_id=week_id)
         return cls(
-            shift_ids=cls._get_shift_ids_for_week(db=db, week_id=week_id),
+            shift_ids=shift_ids,
             employee_ids=employee_ids,
             employee_names=employee_names,
             shift_vector=cls._build_shift_vector(
                 db=db, user_id=user_id, shift_ids=shift_ids
             ),
             availability_matrix=cls._build_availability_matrix(
-                db=db, user_id=user_id, shift_ids=shift_ids, employee_ids=employee_ids
+                db=db, shift_ids=shift_ids, employee_ids=employee_ids
             ),
         )
 
