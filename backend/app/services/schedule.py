@@ -1,12 +1,16 @@
 from sqlalchemy.orm import Session
+from typing import List, Tuple
 from uuid import UUID
+from datetime import time
+from ortools.sat.python import cp_model
 
 import app.schemas.schedule as schemas
-from app.models.shift import Shift
-from app.models import ShiftAssignment, Employee
+import app.domain.shift as shift_domain
 
 
 def build_schedule_schema_from_db(week_id: UUID, user_id: UUID, db: Session):
+    from app.models.shift import Shift
+    from app.models import ShiftAssignment, Employee
     shifts = (
         db.query(Shift).filter(Shift.week_id == week_id, Shift.user_id == user_id).all()
     )
@@ -44,5 +48,354 @@ def build_schedule_schema_from_db(week_id: UUID, user_id: UUID, db: Session):
     return schemas.ScheduleOut(shifts=schedule_shifts_out)
 
 
-def generate_schedule(db: Session, user_id: UUID, week_id: UUID):
-    pass
+def _time_to_min(t: time) -> int:
+    return t.hour * 60 + t.minute
+
+
+class ScheduleGenerator:
+    def __init__(
+        self,
+        *,
+        shift_ids: List[UUID],
+        employee_ids: List[UUID],
+        employee_names: List[str],
+        shift_vector: List[shift_domain.Shift],
+        availability_matrix: List[List[bool]],
+    ):
+
+        self.shift_ids = shift_ids
+        self.employee_ids = employee_ids
+        self.employee_names = employee_names
+        self.shift_vector = shift_vector
+        self.availability_matrix = availability_matrix
+
+        # Preprocessing
+        self.num_shifts = len(self.shift_ids)
+        self.num_employees = len(self.employee_ids)
+
+        self.weekday = [s.weekday for s in self.shift_vector]  # 0..6
+        self.start_min = [_time_to_min(s.start_time) for s in self.shift_vector]
+        self.end_min = [_time_to_min(s.end_time) for s in self.shift_vector]
+        self.duration_min = [
+            max(0, self.end_min[i] - self.start_min[i]) for i in range(self.num_shifts)
+        ]
+        self.demand = [s.min_staff for s in self.shift_vector]
+
+        self.min_start = min(self.start_min) if self.start_min else 0
+        self.max_start = max(self.start_min) if self.start_min else 0
+
+        self.shifts_indices_by_day = {
+            d: [i for i in range(self.num_shifts) if self.weekday[i] == d]
+            for d in range(7)
+        }
+        self.num_search_workers = 8
+
+    # Alternative way of initializing the class, using the database directly
+    @classmethod
+    def from_db(
+        cls,
+        *,
+        db: Session,
+        user_id: UUID,
+        week_id: UUID,
+        shift_ids: List[UUID],
+        employee_ids: List[UUID],
+    ):
+        employee_ids, employee_names = cls._get_employees_for_user(db=db, user_id=user_id)
+        return cls(
+            shift_ids=cls._get_shift_ids_for_week(db=db, week_id=week_id),
+            employee_ids=employee_ids,
+            employee_names=employee_names,
+            shift_vector=cls._build_shift_vector(
+                db=db, user_id=user_id, shift_ids=shift_ids
+            ),
+            availability_matrix=cls._build_availability_matrix(
+                db=db, user_id=user_id, shift_ids=shift_ids, employee_ids=employee_ids
+            ),
+        )
+
+    @classmethod
+    def _get_shift_ids_for_week(cls, week_id: UUID, db: Session):
+        from app.models.shift import Shift
+
+        shifts = db.query(Shift.id).filter(Shift.week_id == week_id).all()
+        shift_ids = []
+        for shift in shifts:
+            shift_ids.append(shift.id)
+        return shift_ids
+
+    @classmethod
+    def _get_employees_for_user(cls, user_id: UUID, db: Session) -> Tuple[List[UUID], List[str]]:
+        from app.models import Employee
+        employees = db.query(Employee.id).filter(Employee.user_id == user_id).all()
+        employee_ids = []
+        employee_names = []
+        for employee in employees:
+            employee_ids.append(employee.id)
+            employee_names.append(employee.name)
+        return employee_ids, employee_names
+
+    @classmethod
+    def _build_shift_vector(
+        cls, *, db: Session, user_id: UUID, shift_ids: List[UUID]
+    ) -> List[shift_domain.Shift]:
+        from app.models.shift import Shift
+        from app.models import ShiftAssignment, Employee, Availability
+        shift_vector = []
+        for shift_id in shift_ids:
+            shift_model = db.query(Shift).filter(Shift.id == shift_id).first()
+            shift_vector.append(shift_model.to_domain())
+        return shift_vector
+
+    @classmethod
+    def _build_availability_matrix(
+        cls,
+        *,
+        db: Session,
+        user_id: UUID,
+        shift_ids: List[UUID],
+        employee_ids: List[UUID],
+    ) -> List[List[bool]]:
+        from app.models.shift import Shift
+        from app.models import Availability
+        availability_matrix = [
+            [False] * len(shift_ids) for _ in range(len(employee_ids))
+        ]
+        for i in range(0, len(shift_ids)):
+            shift = db.query(Shift).filter(Shift.id == shift_ids[i]).first()
+            for j in range(0, len(employee_ids)):
+                availabilities = (
+                    db.query(Availability)
+                    .filter(Availability.employee_id == employee_ids[j])
+                    .all()
+                )
+                for availability in availabilities:
+                    if (
+                        availability.start_time <= shift.start_time
+                        and availability.end_time >= shift.end_time
+                    ):
+                        availability_matrix[j][i] = True
+                        break
+        return availability_matrix
+
+    def _build_feasibility_model(
+        self,
+    ) -> tuple[cp_model.CpModel, List[List[cp_model.IntVar]]]:
+        """
+        Modelo CP-SAT com restrições duras:
+          - Cobertura exata por turno
+          - Disponibilidade
+          - Não sobreposição de turnos por funcionário
+        (NÃO inclui a preferência ≤1 turno/dia/pessoa — isso vai como objetivo de 1ª prioridade.)
+        """
+        model = cp_model.CpModel()
+
+        # x[e][t] is 1 if employee e works shift t, and 0 otherwise.
+        x = [
+            [model.NewBoolVar(f"x[{e},{t}]") for t in range(self.num_shifts)]
+            for e in range(self.num_employees)
+        ]
+
+        # Coverability of the number of employees for each shift
+        for t in range(self.num_shifts):
+            model.Add(
+                sum(x[e][t] for e in range(self.num_employees)) == int(self.demand[t])
+            )
+
+        # Availability
+        for e in range(self.num_employees):
+            for t in range(self.num_shifts):
+                if not self.availability_matrix[e][t]:
+                    model.Add(x[e][t] == 0)
+
+        # Not allow that one employee takes two shifts at the same time
+        for e in range(self.num_employees):
+            for t1 in range(self.num_shifts):
+                for t2 in range(t1 + 1, self.num_shifts):
+                    if not (
+                        self.end_min[t1] <= self.start_min[t2]
+                        or self.end_min[t2] <= self.start_min[t1]
+                    ):
+                        model.Add(x[e][t1] + x[e][t2] <= 1)
+
+        return model, x
+
+    # -------------------- Feasibility check --------------------
+
+    def check_possibility(self) -> bool:
+        """Checa se existe alguma escala viável (sem precisar achar a ótima)."""
+        if self.num_shifts == 0:
+            return True
+
+        model, _x = self._build_feasibility_model()
+
+        solver = cp_model.CpSolver()
+        solver.parameters.max_time_in_seconds = 15.0
+        solver.parameters.num_search_workers = self.num_search_workers
+        solver.parameters.stop_after_first_solution = True
+
+        status = solver.Solve(model)
+        return status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+
+    # -------------------- Geração com otimização lexicográfica (3 níveis) --------------------
+
+    def generate_schedule(self) -> schemas.ScheduleOut:
+        """
+        Otimização lexicográfica em um único modelo (prioridades trocadas):
+          1) Minimiza soma |H_e - T| (fairness).
+          2) Fixando (1), minimiza violações da preferência "≤ 1 turno/dia/pessoa".
+          3) Fixando (2), minimiza consistência de horários (desvio dos inícios).
+        """
+        if self.num_shifts == 0:
+            return schemas.ScheduleOut(shifts=[])
+
+        # ---------- Base Model ----------
+        model, x = self._build_feasibility_model()
+        UPPER = sum(self.duration_min) if self.duration_min else 0
+
+        # =========================
+        # STEP 1 — FAIRNESS (first priority)
+        # =========================
+        # H_e = total minutes per employee
+        H = {e: model.NewIntVar(0, UPPER, f"H[{e}]") for e in range(self.num_employees)}
+        for e in range(self.num_employees):
+            model.Add(
+                H[e]
+                == sum(self.duration_min[t] * x[e][t] for t in range(self.num_shifts))
+            )
+
+        total_minutes = sum(
+            self.duration_min[t] * int(self.demand[t]) for t in range(self.num_shifts)
+        )
+        T = total_minutes // max(1, self.num_employees)
+
+        # We want to minimize the sum of absolute deviations -> sum(|H_e - T|)
+        abs_deviations = []
+        for e in range(self.num_employees):
+            dev = model.NewIntVar(0, UPPER, f"dev[{e}]")
+            model.AddAbsEquality(dev, H[e] - T)
+            abs_deviations.append(dev)
+
+        model.Minimize(sum(abs_deviations))
+        solver1 = cp_model.CpSolver()
+        solver1.parameters.max_time_in_seconds = 20.0
+        solver1.parameters.num_search_workers = self.num_search_workers
+        status1 = solver1.Solve(model)
+        if status1 not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            return schemas.ScheduleOut(shifts=[])
+
+        best_fairness = solver1.ObjectiveValue()
+
+        # Optional: tolerance to fairness loss during the next steps
+        fairness_tol = 0.05
+        model.Add(sum(abs_deviations) <= int((1.0 + fairness_tol) * best_fairness))
+
+        # =========================
+        # ETAPA 2 — ≤ 1 TURNO/DIA/PESSOA (segunda prioridade)
+        # =========================
+        # day_count[e,d] = soma_t em dia d x[e][t]
+        # over[e,d] >= day_count[e,d] - 1   (over >= 0)
+        over_vars = []
+        for e in range(self.num_employees):
+            for d in range(7):
+                day_shift_indices = self.shifts_indices_by_day[d]
+                if not day_shift_indices:
+                    continue
+                max_day_slots = len(day_shift_indices)
+                day_count = model.NewIntVar(0, max_day_slots, f"day_count[{e},{d}]")
+                model.Add(day_count == sum(x[e][t] for t in day_shift_indices))
+                over = model.NewIntVar(0, max_day_slots, f"over[{e},{d}]")
+                model.Add(over >= day_count - 1)
+                over_vars.append(over)
+
+        # Use solution of step 1 as a hint for step 2
+        for e in range(self.num_employees):
+            for t in range(self.num_shifts):
+                model.AddHint(x[e][t], solver1.Value(x[e][t]))
+
+        obj_over = sum(over_vars) if over_vars else 0
+        model.Minimize(obj_over)
+
+        solver2 = cp_model.CpSolver()
+        solver2.parameters.max_time_in_seconds = 15.0
+        solver2.parameters.num_search_workers = self.num_search_workers
+        status2 = solver2.Solve(model)
+        if status2 not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            chosen_after_2 = solver1
+            best_over_val = None
+        else:
+            chosen_after_2 = solver2
+            best_over_val = solver2.ObjectiveValue()
+
+        # Optional: tolerance to over-usage loss during the third step
+        over_tolerance = 0.2
+        if over_vars and best_over_val is not None:
+            model.Add(sum(over_vars) <= int((1.0 + over_tolerance) * best_over_val))
+
+        # =========================
+        # ETAPA 3 — CONSISTÊNCIA DOS HORÁRIOS (terceira prioridade)
+        # =========================
+        # Âncora por funcionário (em minutos) e desvio |start_t - anchor_e|
+        if self.num_shifts > 0:
+            t_anchor = {
+                e: model.NewIntVar(self.min_start, self.max_start, f"t_anchor[{e}]")
+                for e in range(self.num_employees)
+            }
+        else:
+            t_anchor = {}
+
+        y = []
+        for e in range(self.num_employees):
+            for t in range(self.num_shifts):
+                y_et = model.NewIntVar(0, 24 * 60, f"y[{e},{t}]")
+                model.Add(y_et >= self.start_min[t] - t_anchor[e]).OnlyEnforceIf(
+                    x[e][t]
+                )
+                model.Add(y_et >= t_anchor[e] - self.start_min[t]).OnlyEnforceIf(
+                    x[e][t]
+                )
+                model.Add(y_et == 0).OnlyEnforceIf(x[e][t].Not())
+                y.append(y_et)
+
+        # Use step 2 as a hint for step 3
+        for e in range(self.num_employees):
+            for t in range(self.num_shifts):
+                model.AddHint(x[e][t], chosen_after_2.Value(x[e][t]))
+
+        model.Minimize(sum(y))
+        solver3 = cp_model.CpSolver()
+        solver3.parameters.max_time_in_seconds = 15.0
+        solver3.parameters.num_search_workers = self.num_search_workers
+        status3 = solver3.Solve(model)
+
+        final_solver = (
+            solver3
+            if status3 in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+            else chosen_after_2
+        )
+
+        # ---------- Montagem do ScheduleOut ----------
+        schedule_shifts_out: List[schemas.ScheduleShiftOut] = []
+        for t in range(self.num_shifts):
+            employees_out: List[schemas.ScheduleShiftEmployeeOut] = []
+            for e in range(self.num_employees):
+                if final_solver.Value(x[e][t]) == 1:
+                    employees_out.append(
+                        schemas.ScheduleShiftEmployeeOut(
+                            employee_id=self.employee_ids[e],
+                            name=self.employee_names[e],
+                        )
+                    )
+            s = self.shift_vector[t]
+            schedule_shifts_out.append(
+                schemas.ScheduleShiftOut(
+                    shift_id=self.shift_ids[t],
+                    weekday=s.weekday,
+                    start_time=s.start_time,
+                    end_time=s.end_time,
+                    min_staff=s.min_staff,
+                    employees=employees_out,
+                )
+            )
+
+        return schemas.ScheduleOut(shifts=schedule_shifts_out)
