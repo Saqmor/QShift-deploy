@@ -13,6 +13,7 @@ import app.schemas.schedule as schemas
 # Helpers
 # -----------------------------
 
+
 def _t(h: int, m: int = 0) -> time:
     return time(hour=h, minute=m)
 
@@ -24,12 +25,12 @@ def _overlap(s1: shift_domain.Shift, s2: shift_domain.Shift) -> bool:
     start1 = s1.start_time.hour * 60 + s1.start_time.minute
     end1 = s1.end_time.hour * 60 + s1.end_time.minute
     start2 = s2.start_time.hour * 60 + s2.start_time.minute
-    end2 = s2.end_time.hour * 60 + s2.start_time.minute
+    end2 = s2.end_time.hour * 60 + s2.end_time.minute
     return not (end1 <= start2 or end2 <= start1)
 
 
 def _print_schedule(schedule: schemas.ScheduleOut) -> None:
-    """Pretty-prints the schedule on the terminal."""
+    """Prints the schedule on the terminal as an ASCII table."""
     day_name = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
     def fmt_time(t: time) -> str:
@@ -44,18 +45,51 @@ def _print_schedule(schedule: schemas.ScheduleOut) -> None:
         print("(no shift)")
         return
 
+    headers = ["Dia", "Início", "Fim", "Min", "Funcionários"]
+    rows = []
     for s in shifts_sorted:
         employees = ", ".join(emp.name or str(emp.employee_id) for emp in s.employees)
         if not employees:
             employees = "(sem alocação)"
-        print(
-            f"{day_name[s.weekday]} "
-            f"{fmt_time(s.start_time)}–{fmt_time(s.end_time)} "
-            f"(min={s.min_staff}): {employees}"
+        rows.append(
+            [
+                day_name[s.weekday],
+                fmt_time(s.start_time),
+                fmt_time(s.end_time),
+                str(s.min_staff),
+                employees,
+            ]
         )
 
+    col_widths = [len(h) for h in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(cell))
 
-def _assert_basic_constraints(gen: ScheduleGenerator, schedule: schemas.ScheduleOut) -> None:
+    def sep(char_mid="+", char_h="-", char_sep="+"):
+        parts = [char_sep]
+        for w in col_widths:
+            parts.append(char_h * (w + 2))
+            parts.append(char_sep)
+        return "".join(parts)
+
+    def fmt_row(values):
+        cells = []
+        for i, v in enumerate(values):
+            cells.append(" " + v.ljust(col_widths[i]) + " ")
+        return "|" + "|".join(cells) + "|"
+
+    print(sep())
+    print(fmt_row(headers))
+    print(sep())
+    for r in rows:
+        print(fmt_row(r))
+    print(sep())
+
+
+def _assert_basic_constraints(
+    gen: ScheduleGenerator, schedule: schemas.ScheduleOut
+) -> None:
     """
     Assert exact coverage, availability respect, and no overlap by employee.
     (Hard constraints only; step-2 '≤1 turno/dia' é objetivo/penalidade, não é hard.)
@@ -99,6 +133,7 @@ def _assert_basic_constraints(gen: ScheduleGenerator, schedule: schemas.Schedule
 # Instances
 # -----------------------------
 
+
 def _build_small_instance() -> ScheduleGenerator:
     """
     Small, feasible instance:
@@ -114,17 +149,25 @@ def _build_small_instance() -> ScheduleGenerator:
     # Tue (1): 09-13 (S2) and 13-17 (S3)  -> no overlap
     shift_ids = [uuid.uuid4() for _ in range(4)]
     shifts: List[shift_domain.Shift] = [
-        shift_domain.Shift(id=shift_ids[0], weekday=0, start_time=_t(9), end_time=_t(13), min_staff=1),
-        shift_domain.Shift(id=shift_ids[1], weekday=0, start_time=_t(12), end_time=_t(16), min_staff=1),
-        shift_domain.Shift(id=shift_ids[2], weekday=1, start_time=_t(9), end_time=_t(13), min_staff=1),
-        shift_domain.Shift(id=shift_ids[3], weekday=1, start_time=_t(13), end_time=_t(17), min_staff=1),
+        shift_domain.Shift(
+            id=shift_ids[0], weekday=0, start_time=_t(9), end_time=_t(13), min_staff=1
+        ),
+        shift_domain.Shift(
+            id=shift_ids[1], weekday=0, start_time=_t(12), end_time=_t(16), min_staff=1
+        ),
+        shift_domain.Shift(
+            id=shift_ids[2], weekday=1, start_time=_t(9), end_time=_t(13), min_staff=1
+        ),
+        shift_domain.Shift(
+            id=shift_ids[3], weekday=1, start_time=_t(13), end_time=_t(17), min_staff=1
+        ),
     ]
 
     # Availability [emp][shift]
     availability = [
-        [True,  False, True,  False],  # Alice
-        [False, True,  False, True ],  # Bob
-        [True,  True,  True,  True ],  # Carol (backup)
+        [True, False, True, False],  # Alice
+        [False, True, False, True],  # Bob
+        [True, True, True, True],  # Carol (backup)
     ]
 
     return ScheduleGenerator(
@@ -151,11 +194,17 @@ def _build_week_large_instance() -> ScheduleGenerator:
     shift_ids = []
     shifts: List[shift_domain.Shift] = []
     for d in range(7):
-        for (start_h, end_h) in [(9, 13), (13, 17), (17, 21)]:
+        for start_h, end_h in [(9, 13), (13, 17), (17, 21)]:
             sid = uuid.uuid4()
             shift_ids.append(sid)
             shifts.append(
-                shift_domain.Shift(id=sid, weekday=d, start_time=_t(start_h), end_time=_t(end_h), min_staff=2)
+                shift_domain.Shift(
+                    id=sid,
+                    weekday=d,
+                    start_time=_t(start_h),
+                    end_time=_t(end_h),
+                    min_staff=2,
+                )
             )
 
     num_shifts = len(shifts)  # 7 * 3 = 21
@@ -190,7 +239,16 @@ def _build_week_constrained_instance() -> ScheduleGenerator:
       6 Giovana: full availability except Tuesday off
       7 Helena:  Fri–Sun only; afternoons & evenings (no mornings)
     """
-    employee_names = ["Ana", "Bruno", "Carla", "Diego", "Elaine", "Fabio", "Giovana", "Helena"]
+    employee_names = [
+        "Ana",
+        "Bruno",
+        "Carla",
+        "Diego",
+        "Elaine",
+        "Fabio",
+        "Giovana",
+        "Helena",
+    ]
     employee_ids = [uuid.uuid4() for _ in employee_names]
     num_employees = len(employee_ids)
 
@@ -286,6 +344,7 @@ def _build_week_constrained_instance() -> ScheduleGenerator:
 # Fixtures
 # -----------------------------
 
+
 @pytest.fixture
 def small_instance():
     return _build_small_instance()
@@ -304,6 +363,7 @@ def week_constrained_instance():
 # -----------------------------
 # Tests
 # -----------------------------
+
 
 @pytest.mark.unit
 def test_check_possibility_feasible(small_instance: ScheduleGenerator):
@@ -342,7 +402,9 @@ def test_generate_schedule_week_large_instance(week_large_instance: ScheduleGene
 
 
 @pytest.mark.unit
-def test_generate_schedule_week_constrained_instance(week_constrained_instance: ScheduleGenerator):
+def test_generate_schedule_week_constrained_instance(
+    week_constrained_instance: ScheduleGenerator,
+):
     """
     Full-week with employee constraints and varying demand:
       - Validates solver under tighter availability patterns and higher peaks (e.g., Friday).
