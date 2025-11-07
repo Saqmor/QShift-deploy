@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import APIRouter, status, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import Tuple
 
 import app.schemas.schedule as schemas
 import app.services.schedule as schedule_service
@@ -8,6 +9,7 @@ from app.models import ShiftAssignment, Employee
 from app.models.shift import Shift
 from app.api.dependencies import current_user_id
 from app.core.db import get_session
+from app.services.schedule import ScheduleGenerator
 
 router = APIRouter(prefix="/weeks/{week_id}/schedule", tags=["schedule"])
 
@@ -52,3 +54,20 @@ def read_schedule(
 ):
     return schedule_service.build_schedule_schema_from_db(week_id, user_id, db)
 
+
+# GENERATE PREVIEW SCHEDULE
+@router.get("", response_model=Tuple[bool, schemas.ScheduleOut], status_code=status.HTTP_200_OK)
+def generate_preview_schedule(
+    week_id: UUID,
+    user_id: UUID = Depends(current_user_id),
+    db: Session = Depends(get_session),
+):
+    schedule_generator = ScheduleGenerator.from_db(db=db, user_id=user_id, week_id=week_id)
+    possible = schedule_generator.check_possibility()
+
+    if possible:
+        schedule_out = schedule_generator.generate_schedule()
+    else:
+        schedule_out = None
+
+    return possible, schedule_out
