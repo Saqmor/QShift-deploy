@@ -250,7 +250,7 @@ class ScheduleGenerator:
             return schemas.ScheduleOut(shifts=[])
 
         model, x = self._build_feasibility_model()
-        max_working_time = sum(self.shift_duration_min) if self.shift_duration_min else 0
+        max_working_time = sum(self.shift_duration_min)
 
         # Step 1: Fairness
 
@@ -268,24 +268,37 @@ class ScheduleGenerator:
         T = total_minutes // max(1, self.num_employees)
 
         # We want to minimize the sum of absolute deviations -> sum(|H_e - T|)
-        abs_deviations = []
+        devp = {}
+        devm = {}
+        dev = {}
         for e in range(self.num_employees):
-            dev = model.NewIntVar(0, max_working_time, f"dev[{e}]")
-            model.AddAbsEquality(dev, H[e] - T)
-            abs_deviations.append(dev)
+            devp[e] = model.NewIntVar(0, total_minutes, f"devp[{e}]")
+            devm[e] = model.NewIntVar(0, total_minutes, f"devm[{e}]")
+            model.Add(H[e] - T == devp[e] - devm[e])
+            dev[e] = model.NewIntVar(0, 2 * total_minutes, f"dev[{e}]")
+            model.Add(dev[e] == devp[e] + devm[e])
 
-        model.Minimize(sum(abs_deviations))
+        model.Minimize(sum(dev))
         solver1 = cp_model.CpSolver()
         solver1.parameters.max_time_in_seconds = 20.0
         solver1.parameters.num_search_workers = self.num_search_workers
         status1 = solver1.Solve(model)
-        if status1 not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-            return schemas.ScheduleOut(shifts=[])
+        if status1 != cp_model.OPTIMAL and status1 != cp_model.FEASIBLE:
+            print("No feasible solution found for step 1. Status: ", solver1.StatusName())
+            chosen_after_1 = cp_model.CpSolver()
+            chosen_after_1.parameters.max_time_in_seconds = 15.0
+            chosen_after_1.parameters.num_search_workers = self.num_search_workers
+            chosen_after_1.parameters.stop_after_first_solution = True
+            chosen_after_1.Solve(model)
+        else:
+            chosen_after_1 = solver1
 
-        best_fairness = solver1.ObjectiveValue()
+        best_fairness = chosen_after_1.ObjectiveValue()
 
         fairness_tol = 0.05 # Tolerance to fairness loss during the next steps
-        model.Add(sum(abs_deviations) <= int((1.0 + fairness_tol) * best_fairness))
+        model.Add(sum(dev) <= int((1.0 + fairness_tol) * best_fairness))
+
+        print("num_shifts: ", self.num_shifts)
 
         # Step 2: penalizes more than one 1 shift by day by person
 
@@ -308,7 +321,7 @@ class ScheduleGenerator:
         # Use solution of step 1 as a hint for step 2
         for e in range(self.num_employees):
             for t in range(self.num_shifts):
-                model.AddHint(x[e][t], solver1.Value(x[e][t]))
+                model.AddHint(x[e][t], chosen_after_1.Value(x[e][t]))
 
         obj_over = sum(over_vars) if over_vars else 0
         model.Minimize(obj_over)
@@ -317,8 +330,9 @@ class ScheduleGenerator:
         solver2.parameters.max_time_in_seconds = 15.0
         solver2.parameters.num_search_workers = self.num_search_workers
         status2 = solver2.Solve(model)
-        if status2 not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-            chosen_after_2 = solver1
+        if status2 != cp_model.OPTIMAL and status2 != cp_model.FEASIBLE:
+            print("No feasible solution found for step 2. Status: ", solver2.StatusName())
+            chosen_after_2 = chosen_after_1
             best_over_val = None
         else:
             chosen_after_2 = solver2
@@ -330,6 +344,7 @@ class ScheduleGenerator:
             model.Add(sum(over_vars) <= int((1.0 + over_tolerance) * best_over_val))
 
         # Step 3: Schedule time consistency (penalizes shifts in different times for one employee over the week)
+        print("num_shifts: ", self.num_shifts)
 
         if self.num_shifts > 0:
             time_anchor = { # Anchor time for each employee
@@ -365,9 +380,11 @@ class ScheduleGenerator:
 
         final_solver = (
             solver3
-            if status3 in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+            if status3 == cp_model.OPTIMAL or status3 == cp_model.FEASIBLE
             else chosen_after_2
         )
+        if not (status3 == cp_model.OPTIMAL or status3 == cp_model.FEASIBLE):
+            print("No feasible solution found for step 3. Status: ", solver3.StatusName())
 
         # Building Schema (ScheduleOut)
         schedule_shifts_out: List[schemas.ScheduleShiftOut] = []
@@ -392,5 +409,6 @@ class ScheduleGenerator:
                     employees=employees_out,
                 )
             )
+        print("num_shifts: ", self.num_shifts)
 
         return schemas.ScheduleOut(shifts=schedule_shifts_out)
