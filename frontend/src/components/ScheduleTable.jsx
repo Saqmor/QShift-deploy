@@ -188,18 +188,23 @@ function ScheduleTable({
                             <div className="min-h-[80px] flex flex-col gap-1">
                                 {slot ? (
                                 <>
-                                    {employees.length > 0 ? (
-                                    employees.map((emp, i) => (
-                                        <div
-                                        key={i}
-                                        className="px-2 py-1.5 bg-blue-600/50 text-white text-xs rounded text-center font-medium"
-                                        >
-                                        {emp.name}
-                                        </div>
-                                    ))
-                                    ) : (
-                                    <div className="text-slate-500 text-center text-xs py-6">{slot && editMode ? "click" : "—"}</div>
-                                    )}
+                                  {isUnderStaffed && (
+                                    <div className="text-xs text-red-400 font-medium mb-1">
+                                      {employees.length}/{slot.minEmployees}
+                                    </div>
+                                  )}
+                                  {employees.length > 0 ? (
+                                  employees.map((emp, i) => (
+                                      <div
+                                      key={i}
+                                      className="px-2 py-1.5 bg-blue-600/50 text-white text-xs rounded text-center font-medium"
+                                      >
+                                      {emp.name}
+                                      </div>
+                                  ))
+                                  ) : (
+                                  <div className="text-slate-500 text-center text-xs py-6">{slot && editMode ? "click" : "—"}</div>
+                                  )}
                                 </>
                                 ) : (
                                   <div className="text-slate-700 text-center py-6">—</div>
