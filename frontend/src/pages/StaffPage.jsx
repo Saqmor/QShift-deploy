@@ -71,12 +71,14 @@ function StaffPage({
   };
 
   const handleAdvance = () => {
+      setIsLoading(true);
       onPageChange(2);
+
   };
 
   if (isLoading) {
       return (
-          <BaseLayout showSidebar={false} currentPage={7} onPageChange={onPageChange}>
+          <BaseLayout showSidebar={false} currentPage={1} onPageChange={onPageChange}>
               <div className="flex items-center justify-center min-h-screen">
                   <div className="text-center">
                       <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
