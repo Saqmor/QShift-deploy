@@ -5,7 +5,6 @@ import pytest
 @pytest.mark.integration
 def test_seed_happy_flow():
     c = TestClient(app)
-    
 
     # 1) Seed
     r = c.post("/dev/seed")
@@ -32,4 +31,5 @@ def test_seed_happy_flow():
         r = c.get(f"/employees/{e['id']}/availabilities")
         assert r.status_code == 200
         total_av += len(r.json())
-    assert total_av == 25  # 5 emp * 5 days
+    expected_av = len(employees) * 5
+    assert total_av == expected_av

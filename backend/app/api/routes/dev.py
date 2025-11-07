@@ -6,6 +6,7 @@ from datetime import date, time, timedelta
 from app.core.db import get_session
 from app.api.dependencies import current_user_id
 from app.models import User, Employee, Week, Shift, Availability, ShiftAssignment
+from app.core.logging import logger
 
 router = APIRouter(prefix="/dev", tags=["dev"])
 
@@ -25,18 +26,24 @@ def seed(db: Session = Depends(get_session), user_id=Depends(current_user_id)):
     - Availabilities Mon-Fri 09:00-18:00 for all employees
     """
 
-    # 0) Clear demo user db
+    logger.info(f"Seeding started for user {user_id}")
+
+    # 0) Clear demo user
     db.query(User).filter_by(id=user_id).delete(synchronize_session=False)
+    logger.info("Demo user cleared")
 
     # 1) USER
     user = User(id=user_id, username="demo", password_hash="x")
     db.add(user)
     db.flush()
+    logger.info("Demo user created")
+
     # 2) EMPLOYEES
     names: list[str] = ["Artur", "Arthur", "Angelo", "Gabriel", "Guilherme"]
     for n in names:
         db.add(Employee(user_id=user_id, name=n, active=True))
     db.flush()
+    logger.info("Seed employees created")
 
     # 3) WEEK (next Monday; your schemas use open_days: List[int])
     start = next_monday(date.today())
@@ -49,6 +56,7 @@ def seed(db: Session = Depends(get_session), user_id=Depends(current_user_id)):
     )
     db.add(week)
     db.flush()
+    logger.info("Seed week created")
 
     # 4) WEEK SHIFTS
     for wd in week.open_days:  # according to your Week.open_days (int[] 0..6)
@@ -77,6 +85,7 @@ def seed(db: Session = Depends(get_session), user_id=Depends(current_user_id)):
                 ),
             ]
         )
+        logger.info("Seed shifts created")
 
     # 5) AVAILABILITIES (Mon–Fri 09–18 for all active employees)
     employees = db.query(Employee).filter_by(user_id=user_id, active=True).all()
@@ -91,6 +100,7 @@ def seed(db: Session = Depends(get_session), user_id=Depends(current_user_id)):
                     end_time=time(18, 0),
                 )
             )
+    logger.info("Seed availabilities created")
 
     return {
         "user_id": str(user_id),
