@@ -305,7 +305,7 @@ class ScheduleGenerator:
         status1 = solver1.Solve(model)
         if status1 != cp_model.OPTIMAL and status1 != cp_model.FEASIBLE:
             print(
-                "No feasible solution found for step 1. Status: ", solver1.StatusName()
+                "\033[91mWARNING:\033[0mNo feasible solution found for step 1. Status: ", solver1.StatusName()
             )
             chosen_after_1 = cp_model.CpSolver()
             chosen_after_1.parameters.max_time_in_seconds = 15.0
@@ -354,7 +354,7 @@ class ScheduleGenerator:
         status2 = solver2.Solve(model)
         if status2 != cp_model.OPTIMAL and status2 != cp_model.FEASIBLE:
             print(
-                "No feasible solution found for step 2. Status: ", solver2.StatusName()
+                f"\033[91mWARNING:\033[0mNo feasible solution found for step 2. Status: ", solver2.StatusName()
             )
             chosen_after_2 = chosen_after_1
             best_over_val = None
@@ -399,7 +399,7 @@ class ScheduleGenerator:
         #     final_solver = solver3
         # else:
         #     print(
-        #         "No feasible solution found for step 3. Status: ",
+        #         f"\033[91mWARNING:\033[0mNo feasible solution found for step 3. Status: ",
         #         solver3.StatusName(status3),
         #     )
         #     final_solver = chosen_after_2
