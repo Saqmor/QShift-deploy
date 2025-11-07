@@ -1,6 +1,9 @@
+from collections import defaultdict
+import math
 import uuid
 from datetime import time
-from typing import List
+from sched import scheduler
+from typing import List, Tuple
 
 import pytest
 
@@ -29,8 +32,91 @@ def _overlap(s1: shift_domain.Shift, s2: shift_domain.Shift) -> bool:
     return not (end1 <= start2 or end2 <= start1)
 
 
+def _render_ascii_table(headers: List[str], rows: List[List[str]]) -> None:
+    """Render a simple ASCII table given headers and rows."""
+    col_widths = [len(h) for h in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(cell))
+
+    def sep(char_sep: str = "+", char_h: str = "-") -> str:
+        parts = [char_sep]
+        for w in col_widths:
+            parts.append(char_h * (w + 2))
+            parts.append(char_sep)
+        return "".join(parts)
+
+    def fmt_row(values: List[str]) -> str:
+        cells = []
+        for i, v in enumerate(values):
+            cells.append(" " + v.ljust(col_widths[i]) + " ")
+        return "|" + "|".join(cells) + "|"
+
+    print(sep())
+    print(fmt_row(headers))
+    print(sep())
+    for r in rows:
+        print(fmt_row(r))
+    print(sep())
+
+
+def _shift_duration_hours(start_t: time, end_t: time) -> float:
+    """Return the duration of a shift in hours (same-day assumption)."""
+    start_min = start_t.hour * 60 + start_t.minute
+    end_min = end_t.hour * 60 + end_t.minute
+    return max(0, end_min - start_min) / 60.0
+
+
+def _hours_per_employee(schedule: schemas.ScheduleOut) -> dict:
+    """Accumulate total worked hours per employee id."""
+    hours = defaultdict(float)
+    names = {}
+
+    for s in schedule.shifts:
+        dur = _shift_duration_hours(s.start_time, s.end_time)
+        for emp in s.employees:
+            emp_id = emp.employee_id
+            hours[emp_id] += dur
+            # Keep the latest non-empty name reference
+            if getattr(emp, "name", None):
+                names[emp_id] = emp.name
+
+    show = {}
+    for emp_id, h in hours.items():
+        display = names.get(emp_id, str(emp_id))
+        show[emp_id] = (display, h)
+    return show
+
+
+def _employees_worked_multiple_shifts_in_a_day(schedule: schemas.ScheduleOut) -> int:
+    """
+    Count employees who worked more than one shift on the same weekday
+    at least once during the schedule.
+    """
+    by_emp_day = defaultdict(lambda: defaultdict(int))
+    for s in schedule.shifts:
+        for emp in s.employees:
+            by_emp_day[emp.employee_id][s.weekday] += 1
+
+    count_emp = 0
+    for emp_id, day_counts in by_emp_day.items():
+        if any(c > 1 for c in day_counts.values()):
+            count_emp += 1
+    return count_emp
+
+
+def _mean_std(values: List[float]) -> Tuple[float, float]:
+    """Compute population mean and population standard deviation."""
+    if not values:
+        return 0.0, 0.0
+    n = len(values)
+    mean = sum(values) / n
+    var = sum((v - mean) ** 2 for v in values) / n
+    return mean, math.sqrt(var)
+
+
 def _print_schedule(schedule: schemas.ScheduleOut) -> None:
-    """Prints the schedule on the terminal as an ASCII table."""
+    """Prints the schedule and a per-employee summary as ASCII tables."""
     day_name = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
     def fmt_time(t: time) -> str:
@@ -45,13 +131,13 @@ def _print_schedule(schedule: schemas.ScheduleOut) -> None:
         print("(no shift)")
         return
 
-    headers = ["Dia", "Início", "Fim", "Min", "Funcionários"]
-    rows = []
+    schedule_headers = ["Dia", "Início", "Fim", "Min", "Funcionários"]
+    schedule_rows = []
     for s in shifts_sorted:
         employees = ", ".join(emp.name or str(emp.employee_id) for emp in s.employees)
         if not employees:
             employees = "(sem alocação)"
-        rows.append(
+        schedule_rows.append(
             [
                 day_name[s.weekday],
                 fmt_time(s.start_time),
@@ -60,31 +146,31 @@ def _print_schedule(schedule: schemas.ScheduleOut) -> None:
                 employees,
             ]
         )
+    _render_ascii_table(schedule_headers, schedule_rows)
 
-    col_widths = [len(h) for h in headers]
-    for row in rows:
-        for i, cell in enumerate(row):
-            col_widths[i] = max(col_widths[i], len(cell))
+    per_emp = _hours_per_employee(schedule)
+    sorted_items = sorted(per_emp.items(), key=lambda kv: kv[1][0].lower())
+    emp_rows = []
+    hours_values = []
+    for _, (display_name, total_h) in sorted_items:
+        hours_values.append(total_h)
+        emp_rows.append([display_name, f"{total_h:.2f}"])
 
-    def sep(char_mid="+", char_h="-", char_sep="+"):
-        parts = [char_sep]
-        for w in col_widths:
-            parts.append(char_h * (w + 2))
-            parts.append(char_sep)
-        return "".join(parts)
+    mean_h, std_h = _mean_std(hours_values)
+    multi_shift_count = _employees_worked_multiple_shifts_in_a_day(schedule)
 
-    def fmt_row(values):
-        cells = []
-        for i, v in enumerate(values):
-            cells.append(" " + v.ljust(col_widths[i]) + " ")
-        return "|" + "|".join(cells) + "|"
+    print("\n=== RESUMO POR FUNCIONÁRIO ===")
+    _render_ascii_table(["Funcionário", "Horas"], emp_rows)
 
-    print(sep())
-    print(fmt_row(headers))
-    print(sep())
-    for r in rows:
-        print(fmt_row(r))
-    print(sep())
+    print("\n=== AGREGADOS ===")
+    _render_ascii_table(
+        ["Métrica", "Valor"],
+        [
+            ["Média (horas)", f"{mean_h:.2f}"],
+            ["Desvio padrão (horas)", f"{std_h:.2f}"],
+            [">1 turno no mesmo dia (funcionários)", str(multi_shift_count)],
+        ],
+    )
 
 
 def _assert_basic_constraints(
