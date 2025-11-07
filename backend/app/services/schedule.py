@@ -75,10 +75,13 @@ class ScheduleGenerator:
         self.num_employees = len(self.employee_ids)
 
         self.weekday = [s.weekday for s in self.shift_vector]  # 0..6
-        self.start_time_minutes = [_time_to_min(s.start_time) for s in self.shift_vector]
+        self.start_time_minutes = [
+            _time_to_min(s.start_time) for s in self.shift_vector
+        ]
         self.end_time_minutes = [_time_to_min(s.end_time) for s in self.shift_vector]
         self.shift_duration_min = [
-            max(0, self.end_time_minutes[i] - self.start_time_minutes[i]) for i in range(self.num_shifts)
+            max(0, self.end_time_minutes[i] - self.start_time_minutes[i])
+            for i in range(self.num_shifts)
         ]
         self.demand = [s.min_staff for s in self.shift_vector]
 
@@ -183,6 +186,18 @@ class ScheduleGenerator:
                         break
         return availability_matrix
 
+    def _check_overlapping(self, t1: int, t2: int) -> bool:
+        """Checks if two shifts overlap."""
+        if self.weekday[t1] != self.weekday[t2]:
+            return False
+        return (
+            self.end_time_minutes[t1] > self.start_time_minutes[t2]
+            and self.end_time_minutes[t2] > self.start_time_minutes[t1]
+        ) or (
+            self.end_time_minutes[t2] > self.start_time_minutes[t1]
+            and self.end_time_minutes[t1] > self.start_time_minutes[t2]
+        )
+
     def _build_feasibility_model(
         self,
     ) -> Tuple[cp_model.CpModel, List[List[cp_model.IntVar]]]:
@@ -210,16 +225,15 @@ class ScheduleGenerator:
         for e in range(self.num_employees):
             for t in range(self.num_shifts):
                 if not self.availability_matrix[e][t]:
+                    # print(f"Employee {e} is not available for shift {t}.")
                     model.Add(x[e][t] == 0)
 
         # Not allow that one employee takes two shifts at the same time
-        for e in range(self.num_employees):
-            for t1 in range(self.num_shifts):
-                for t2 in range(t1 + 1, self.num_shifts):
-                    if not (
-                            self.end_time_minutes[t1] <= self.start_time_minutes[t2]
-                            or self.end_time_minutes[t2] <= self.start_time_minutes[t1]
-                    ):
+        for t1 in range(self.num_shifts):
+            for t2 in range(t1 + 1, self.num_shifts):
+                if self._check_overlapping(t1, t2):
+                    # print(f"Shifts {t1} and {t2} overlap.'")
+                    for e in range(self.num_employees):
                         model.Add(x[e][t1] + x[e][t2] <= 1)
 
         return model, x
@@ -355,40 +369,41 @@ class ScheduleGenerator:
 
         # Step 3: Schedule time consistency (penalizes shifts in different times for one employee over the week)
 
-        time_anchor = {  # Anchor time for each employee
-            e: model.NewIntVar(self.min_start, self.max_start, f"time_anchor[{e}]")
-            for e in range(self.num_employees)
-        }
-
-        y = []  # Deviation from anchor time
-        for e in range(self.num_employees):
-            for t in range(self.num_shifts):
-                M = 1440
-                y_et = model.NewIntVar(0, M, f"y[{e},{t}]")
-                model.Add(y_et + time_anchor[e] >= self.start_time_minutes[t] - (M - M * x[e][t]))
-                model.Add(y_et - time_anchor[e] >= - self.start_time_minutes[t] - (M - M * x[e][t]))
-                model.Add(y_et <= M * x[e][t])
-                y.append(y_et)
-
-        # Use step 2 as a hint for step 3
-        for e in range(self.num_employees):
-            for t in range(self.num_shifts):
-                model.AddHint(x[e][t], chosen_after_2.Value(x[e][t]))
-
-        model.Minimize(sum(y))
-        solver3 = cp_model.CpSolver()
-        solver3.parameters.max_time_in_seconds = 15.0
-        solver3.parameters.num_search_workers = self.num_search_workers
-        status3 = solver3.Solve(model)
-
-        if status3 == cp_model.OPTIMAL or status3 == cp_model.FEASIBLE:
-            final_solver = solver3
-        else:
-            print(
-                "No feasible solution found for step 3. Status: ",
-                solver3.StatusName(status3),
-            )
-            final_solver = chosen_after_2
+        # time_anchor = {  # Anchor time for each employee
+        #     e: model.NewIntVar(self.min_start, self.max_start, f"time_anchor[{e}]")
+        #     for e in range(self.num_employees)
+        # }
+        #
+        # y = []  # Deviation from anchor time
+        # for e in range(self.num_employees):
+        #     for t in range(self.num_shifts):
+        #         M = 1440
+        #         y_et = model.NewIntVar(0, M, f"y[{e},{t}]")
+        #         model.Add(y_et + time_anchor[e] >= self.start_time_minutes[t] - (M - M * x[e][t]))
+        #         model.Add(y_et - time_anchor[e] >= - self.start_time_minutes[t] - (M - M * x[e][t]))
+        #         model.Add(y_et <= M * x[e][t])
+        #         y.append(y_et)
+        #
+        # # Use step 2 as a hint for step 3
+        # for e in range(self.num_employees):
+        #     for t in range(self.num_shifts):
+        #         model.AddHint(x[e][t], chosen_after_2.Value(x[e][t]))
+        #
+        # model.Minimize(sum(y))
+        # solver3 = cp_model.CpSolver()
+        # solver3.parameters.max_time_in_seconds = 15.0
+        # solver3.parameters.num_search_workers = self.num_search_workers
+        # status3 = solver3.Solve(model)
+        #
+        # if status3 == cp_model.OPTIMAL or status3 == cp_model.FEASIBLE:
+        #     final_solver = solver3
+        # else:
+        #     print(
+        #         "No feasible solution found for step 3. Status: ",
+        #         solver3.StatusName(status3),
+        #     )
+        #     final_solver = chosen_after_2
+        final_solver = chosen_after_2
 
         # Building Schema (ScheduleOut)
         schedule_shifts_out: List[schemas.ScheduleShiftOut] = []
