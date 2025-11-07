@@ -180,7 +180,7 @@ class ScheduleGenerator:
 
     def _build_feasibility_model(
         self,
-    ) -> tuple[cp_model.CpModel, List[List[cp_model.IntVar]]]:
+    ) -> Tuple[cp_model.CpModel, List[List[cp_model.IntVar]]]:
         """
         Modelo CP-SAT com restrições duras:
           - Cobertura exata por turno
