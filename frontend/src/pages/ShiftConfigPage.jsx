@@ -22,13 +22,13 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
         {
             id: 1,
             config: [
-                {weekday: 0, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 1, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 2, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 3, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 4, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 5, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 6, start_time: '', end_time: '', min_staff: ''},
+                {weekday: 0, start_time: '', end_time: '', min_staff: null},
+                {weekday: 1, start_time: '', end_time: '', min_staff: null},
+                {weekday: 2, start_time: '', end_time: '', min_staff: null},
+                {weekday: 3, start_time: '', end_time: '', min_staff: null},
+                {weekday: 4, start_time: '', end_time: '', min_staff: null},
+                {weekday: 5, start_time: '', end_time: '', min_staff: null},
+                {weekday: 6, start_time: '', end_time: '', min_staff: null},
             ]
         }
     ]);
@@ -43,13 +43,13 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
         const newShift = {
             id: Date.now(),
             config: [
-                {weekday: 0, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 1, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 2, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 3, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 4, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 5, start_time: '', end_time: '', min_staff: ''},
-                {weekday: 6, start_time: '', end_time: '', min_staff: ''},
+                {weekday: 0, start_time: '', end_time: '', min_staff: null},
+                {weekday: 1, start_time: '', end_time: '', min_staff: null},
+                {weekday: 2, start_time: '', end_time: '', min_staff: null},
+                {weekday: 3, start_time: '', end_time: '', min_staff: null},
+                {weekday: 4, start_time: '', end_time: '', min_staff: null},
+                {weekday: 5, start_time: '', end_time: '', min_staff: null},
+                {weekday: 6, start_time: '', end_time: '', min_staff: null},
             ]
         }
         setShifts([...shifts, newShift]);
@@ -114,10 +114,7 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
             const parsedConfig = JSON.parse(savedConfig);
             const restoredShifts = parsedConfig.map(shift => ({
                 ...shift,
-                config: shift.config.map((dayConfig, index) => ({
-                    ...dayConfig,
-                    localDate: selectedDaysMap[index] || null
-                }))
+                config: shift.config
             }));
             setShifts(restoredShifts);
             console.log("Configurações de turno restauradas:", restoredShifts);
@@ -127,14 +124,17 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
     }
 
     const handleShiftsSchedule = () => {
-        let shiftsSchedule = [];
-        shifts.forEach(weekShift => {
-            weekShift.config.forEach(shift => {
-                shiftsSchedule.push(shift);
-            })
-        })
-        return shiftsSchedule;
-    }
+    let shiftsSchedule = [];
+    shifts.forEach(weekShift => {
+        weekShift.config.forEach(shift => {
+        if (shift.start_time && shift.end_time && shift.min_staff) {
+            shiftsSchedule.push(shift);
+        }
+        });
+    });
+    return shiftsSchedule;
+    };
+
 
     const createSchedule = async () => {
         const shiftsSchedule = handleShiftsSchedule();
@@ -146,9 +146,9 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
         console.log('Semana que vai ser criada', week);
         const responseWeek = await ShiftConfigApi.submitWeekData(week);
         console.log('Semana criada', responseWeek.data);
-        setWeekId(responseWeek.data);
+        setWeekId(responseWeek.data.id);
         const requests = shiftsSchedule.map(shift =>
-            ShiftConfigApi.createShift(responseWeek.data, shift)
+            ShiftConfigApi.createShift(responseWeek.data.id, shift)
         );
         await Promise.all(requests);
         console.log('Todos os turnos criados com sucesso!');
