@@ -73,7 +73,15 @@ function GeneratedSchedule({
         }
     }, [weekData.id]);
 
-    const handleCancel = () => {
+    const handleCancel = async () => {
+        if (weekData) {
+            try {
+                const response = await GeneratedScheduleApi.deleteSchedule(weekData.id);
+                console.log('A escala foi deletada com sucesso');
+            } catch (error) {
+                console.error('Erro ao deletar escala:', error);
+            }
+        }
         onPageChange(1);
     };
 

@@ -29,7 +29,7 @@ function EmployeeSelector({
           </span>
         </div>
         <div className='space-y-2 max-h-96 overflow-y-auto mb-6'>
-          {employeeList.map(emp => {
+          {employeeList.filter(emp => emp.active).map(emp => {
             const isSelected = assignedEmployees.some(assignedEmp => assignedEmp.id === emp.id);
             return (
               <button

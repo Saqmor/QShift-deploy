@@ -162,8 +162,13 @@ export const AvailabilityApi = {
 }
 
 export const GeneratedScheduleApi = {
-    getEmployees: async () => {
-        return await api.get('/employees');
+    deleteSchedule: async (week_id) => {
+        try {
+            return await api.delete(`/weeks/${week_id}`);
+        } catch (error) {
+            console.error('Erro ao deletar a semana da escala:', error);
+            throw error;
+        }
     },
 
     generateSchedulePreview: async (week_id) => {
