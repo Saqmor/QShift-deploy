@@ -3,7 +3,7 @@ import Header from '../components/Header';
 import ScheduleTable from '../components/ScheduleTable';
 import { useState, useEffect } from 'react';
 import {GeneratedScheduleApi} from '../services/api.js'
-import { initialSchedule, initialScheduleEmpty, week } from '../MockData.js';
+import {initialScheduleEmpty} from '../MockData.js';
 
 function GeneratedSchedule({
     onPageChange,
@@ -11,7 +11,7 @@ function GeneratedSchedule({
     setEmployees,
     isLoading,
     setIsLoading,
-    weekId
+    weekData
 }) {
     const [scheduleData, setScheduleData] = useState(initialScheduleEmpty);
     const [editMode, setEditMode] = useState(false);
@@ -48,12 +48,11 @@ function GeneratedSchedule({
         async function generateSchedule() {
             setIsLoading(true);
             try {
-                const response = await GeneratedScheduleApi.generateSchedulePreview(weekId);
+                const response = await GeneratedScheduleApi.generateSchedulePreview(weekData.id);
                 
                 if (response.data.possible && response.data.schedule) {
                     convertScheduleData(response.data.schedule.shifts);
                     setIsPossible(true);
-                    alert('foi possível gerar uma escala viável com as configurações atuais.');
                     console.log('A escala possible:', response.data.possible);
                     console.log('A escala criada:', response.data.schedule);
                     console.log('Turnos:', response.data.schedule.shifts);
@@ -69,10 +68,10 @@ function GeneratedSchedule({
             }
         }
         
-        if (weekId) {
+        if (weekData.id) {
             generateSchedule();
         }
-    }, [weekId]);
+    }, [weekData.id]);
 
     const handleCancel = () => {
         onPageChange(1);
@@ -95,6 +94,7 @@ function GeneratedSchedule({
                 });
             }
         })
+        console.log('shiftsSchedule', shiftsSchedule);
         return shiftsSchedule;
     }
 
@@ -102,7 +102,7 @@ function GeneratedSchedule({
     async function handleApproved() {
         const shiftsSchedule = handleShiftsSchedule();
         try {
-            const response = await GeneratedScheduleApi.approvedSchedule(shiftsSchedule);
+            const response = await GeneratedScheduleApi.approvedSchedule(weekData.id, shiftsSchedule);
             console.log('Escala criada com sucesso:', response.data);
             onPageChange(1);
         } catch (error) {
@@ -133,7 +133,7 @@ function GeneratedSchedule({
                     scheduleData={scheduleData}
                     setScheduleData={setScheduleData}
                     employeeList={employees}
-                    week={week}
+                    week={weekData}
                     editMode={editMode}
                 />
 

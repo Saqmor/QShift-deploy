@@ -3,9 +3,8 @@ import Header from '../components/Header';
 import { useState } from 'react';
 import { Plus, Save, RotateCcw, Calendar, Trash2, ArrowLeft } from 'lucide-react';
 import { ShiftConfigApi }   from '../services/api.js';
-import { week } from '../MockData.js';
 
-function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
+function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
 
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const openDaysMask = [];
@@ -145,10 +144,10 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
             console.log('Criando semana:', week);
             const responseWeek = await ShiftConfigApi.submitWeekData(week);
             console.log('Semana criada com sucesso:', responseWeek.data);
-            const weekId = responseWeek.data.id;
-            setWeekId(weekId);
+            const weekData = responseWeek.data;
+            setWeekData(weekData);
 
-            const shiftsSchedule = handleShiftsSchedule(weekId);
+            const shiftsSchedule = handleShiftsSchedule(weekData.id);
             console.log('Turnos a serem criados:', shiftsSchedule);
             if (shiftsSchedule.length === 0) {
                 alert('Nenhum turno válido configurado. Preencha os horários e quantidade de funcionários.');
@@ -158,7 +157,7 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
             for (const shift of shiftsSchedule) {
                 try {
                     console.log('Criando turno:', shift);
-                    const response = await ShiftConfigApi.createShift(weekId, shift);
+                    const response = await ShiftConfigApi.createShift(weekData.id, shift);
                     console.log('Turno criado:', response.data);
                 } catch (error) {
                     console.error('Erro ao criar turno específico:', shift, error);
