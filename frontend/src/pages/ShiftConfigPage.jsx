@@ -93,7 +93,7 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
                 weekday: dayConfig.weekday,
                 start_time: dayConfig.start_time,
                 end_time: dayConfig.end_time,
-                min_staff: dayConfig.min_staff
+                min_staff: dayConfig.min_staff ? Number(dayConfig.min_staff) : null
             }))
         }));
         // const configPath = path.join(__dirname, 'shiftConfigurations.json');
@@ -114,7 +114,10 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
             const parsedConfig = JSON.parse(savedConfig);
             const restoredShifts = parsedConfig.map(shift => ({
                 ...shift,
-                config: shift.config
+                config: shift.config.map(dayConfig => ({
+                    ...dayConfig,
+                    min_staff: dayConfig.min_staff !== null ? Number(dayConfig.min_staff) : null
+                }))
             }));
             setShifts(restoredShifts);
             console.log("Configurações de turno restauradas:", restoredShifts);
@@ -123,22 +126,22 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
         }
     }
 
-    const handleShiftsSchedule = () => {
+    const handleShiftsSchedule = (weekId) => {
     let shiftsSchedule = [];
     shifts.forEach(weekShift => {
         weekShift.config.forEach(shift => {
         if (shift.start_time && shift.end_time && shift.min_staff) {
-            shiftsSchedule.push(shift);
+            shiftsSchedule.push({
+                ...shift,
+                week_id: weekId
+            });
         }
         });
     });
     return shiftsSchedule;
     };
 
-
     const createSchedule = async () => {
-        const shiftsSchedule = handleShiftsSchedule();
-        console.log('shiftsSchedule', shiftsSchedule);
         const week = {
             start_date: startDate.toISOString().split('T')[0],
             open_days: openDaysMask
@@ -146,6 +149,8 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
         console.log('Semana que vai ser criada', week);
         const responseWeek = await ShiftConfigApi.submitWeekData(week);
         console.log('Semana criada', responseWeek.data);
+        const shiftsSchedule = handleShiftsSchedule(responseWeek.data.id);
+        console.log('shiftsSchedule', shiftsSchedule);
         setWeekId(responseWeek.data.id);
         const requests = shiftsSchedule.map(shift =>
             ShiftConfigApi.createShift(responseWeek.data.id, shift)

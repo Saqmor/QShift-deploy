@@ -30,7 +30,6 @@ function GeneratedSchedule({
             setIsLoading(false);
         }
     }
-
     fetchData();
     }, []);
 

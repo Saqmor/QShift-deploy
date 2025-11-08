@@ -24,7 +24,7 @@ export const ShiftConfigApi = {
         try {
             return await api.post(`/weeks/${week_id}/shifts`, shiftData);
         } catch (error) {
-            console.error('Erro ao criar uma semana:', error);
+            console.error('Erro ao criar um turno:', error);
             throw error;
         }
     },
