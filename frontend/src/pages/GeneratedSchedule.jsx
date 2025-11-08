@@ -74,24 +74,39 @@ function GeneratedSchedule({
         }
     }, [weekId]);
 
-    function handleCancel() {
+    const handleCancel = () => {
         onPageChange(1);
     };
 
-    function handleEdit() {
+    const handleEdit = () => {
         setEditMode(!editMode);
         onPageChange(7);
     };
 
+    const handleShiftsSchedule = () => {
+        const shiftsSchedule = {shifts:[]};
+        days_of_week.forEach(day => {
+            scheduleData[day].forEach(shift => {
+                shiftsSchedule.shifts.push({
+                    shift_id: shift.shift_id,
+                    employee_ids: shift.employees.map(employee => employee.employee_id)
+                })
+            }) 
+        })
+        return shiftsSchedule;
+    }
+
+
     async function handleApproved() {
-    try {
-        const response = await GeneratedScheduleApi.approvedSchedule(scheduleData);
-        console.log('Escala criada com sucesso:', response.data);
-        onPageChange(1);
-    } catch (error) {
-        console.error('Erro ao aprovar a escala:', error);
-        onPageChange(1);
-    }};
+        const shiftsSchedule = handleShiftsSchedule();
+        try {
+            const response = await GeneratedScheduleApi.approvedSchedule(shiftsSchedule);
+            console.log('Escala criada com sucesso:', response.data);
+            onPageChange(1);
+        } catch (error) {
+            console.error('Erro ao aprovar a escala:', error);
+            onPageChange(1);
+        }};
 
     if (isLoading) {
         return (
