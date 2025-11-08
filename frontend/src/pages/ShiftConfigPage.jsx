@@ -39,7 +39,6 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
     };
 
     const addTurn = () => {
-        //TODO: colocar o data em cada turno está relacionado com os dias selecionados
         const newShift = {
             id: Date.now(),
             config: [
@@ -82,10 +81,6 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
         }));
     };
 
-    // TODO: Trocar quando for para usar arquivos ao invés de localStorage
-    // const fs = require('fs');
-    // const path = require('path');
-
     const saveConfigShift = () => {
         const configToSave = shifts.map(shift => ({
             id: shift.id,
@@ -96,19 +91,11 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
                 min_staff: dayConfig.min_staff ? Number(dayConfig.min_staff) : null
             }))
         }));
-        // const configPath = path.join(__dirname, 'shiftConfigurations.json');
-        // fs.writeFileSync(configPath, JSON.stringify(configToSave, null, 2));
         localStorage.setItem('shiftConfigurations', JSON.stringify(configToSave));
         console.log("Configurações de turno salvas:", configToSave);
     };
 
     const restoreConfigShift = () => {
-        /* const configPath = path.join(__dirname, 'shiftConfigurations.json');
-        if (!fs.existsSync(configPath)) {
-            console.log("Nenhum arquivo de configuração encontrado.");
-            return;
-        }
-        const savedConfig = fs.readFileSync(configPath); */
         const savedConfig =  localStorage.getItem('shiftConfigurations');
         if (savedConfig) {
             const parsedConfig = JSON.parse(savedConfig);
@@ -127,39 +114,77 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekId}) {
     }
 
     const handleShiftsSchedule = (weekId) => {
-    let shiftsSchedule = [];
-    shifts.forEach(weekShift => {
-        weekShift.config.forEach(shift => {
-        if (shift.start_time && shift.end_time && shift.min_staff) {
-            shiftsSchedule.push({
-                ...shift,
-                week_id: weekId
+        let shiftsSchedule = [];
+        shifts.forEach(weekShift => {
+            weekShift.config.forEach(shift => {
+                const isDaySelected = selectedDaysMap[shift.weekday] !== undefined;
+                
+                if (isDaySelected && 
+                    shift.start_time && 
+                    shift.end_time && 
+                    shift.min_staff) {
+                    shiftsSchedule.push({
+                        weekday: shift.weekday,
+                        start_time: shift.start_time,
+                        end_time: shift.end_time,
+                        min_staff: Number(shift.min_staff),
+                        week_id: weekId
+                    });
+                }
             });
-        }
         });
-    });
-    return shiftsSchedule;
+        
+        return shiftsSchedule;
     };
 
     const createSchedule = async () => {
-        const week = {
-            start_date: startDate.toISOString().split('T')[0],
-            open_days: openDaysMask
+        try {
+            const week = {
+                start_date: startDate.toISOString().split('T')[0],
+                open_days: openDaysMask
+            };
+            console.log('Criando semana:', week);
+            const responseWeek = await ShiftConfigApi.submitWeekData(week);
+            console.log('Semana criada com sucesso:', responseWeek.data);
+            const weekId = responseWeek.data.id;
+            setWeekId(weekId);
+
+            const shiftsSchedule = handleShiftsSchedule(weekId);
+            console.log('Turnos a serem criados:', shiftsSchedule);
+            if (shiftsSchedule.length === 0) {
+                alert('Nenhum turno válido configurado. Preencha os horários e quantidade de funcionários.');
+                return;
+            }
+            
+            for (const shift of shiftsSchedule) {
+                try {
+                    console.log('Criando turno:', shift);
+                    const response = await ShiftConfigApi.createShift(weekId, shift);
+                    console.log('Turno criado:', response.data);
+                } catch (error) {
+                    console.error('Erro ao criar turno específico:', shift, error);
+                    throw error;
+                }
+            }
+            console.log('Todos os turnos criados com sucesso!');
+            alert('Escala criada com sucesso!');
+            onPageChange(7);
+            
+        } catch (error) {
+            console.error('Erro ao criar escala:', error);
+            
+            if (error.response) {
+                console.error('Resposta do servidor:', error.response.data);
+                alert(`Erro: ${error.response.data.detail || 'Erro ao criar escala'}`);
+            } else if (error.request) {
+                console.error('Sem resposta do servidor:', error.request);
+                alert('Erro: Servidor não respondeu. Verifique se o backend está rodando.');
+            } else {
+                console.error('Erro na configuração:', error.message);
+                alert(`Erro: ${error.message}`);
+            }
         }
-        console.log('Semana que vai ser criada', week);
-        const responseWeek = await ShiftConfigApi.submitWeekData(week);
-        console.log('Semana criada', responseWeek.data);
-        const shiftsSchedule = handleShiftsSchedule(responseWeek.data.id);
-        console.log('shiftsSchedule', shiftsSchedule);
-        setWeekId(responseWeek.data.id);
-        const requests = shiftsSchedule.map(shift =>
-            ShiftConfigApi.createShift(responseWeek.data.id, shift)
-        );
-        await Promise.all(requests);
-        console.log('Todos os turnos criados com sucesso!');
-        onPageChange(7);
-    }
- 
+    };
     return (
         <BaseLayout
             showSidebar={false}
