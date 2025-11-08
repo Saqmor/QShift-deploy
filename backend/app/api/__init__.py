@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from core.config import settings
+from app.core.config import settings
 from app.api.routes.availabilities import router as availabilities_router
 from app.api.routes.employees import router as employees_router
 from app.api.routes.shifts import router as shifts_router
