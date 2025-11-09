@@ -7,10 +7,15 @@ function ReportsPage({ onPageChange}) {
 
     // dados modelo
     const reportCards = [
-        { title: 'Hours Worked', value: 'XXh', icon: Clock},
-        { title: 'Active Employees', value: 'X', icon: Users},
-        { title: 'Generated Scales', value: 'XX', icon: CalendarDays},
+        { title: 'Employees', value: '', icon: Users},
+        { title: 'Generated Scales', value: 'XX', icon: CalendarDays}
     ];
+
+    const handleCard = (card) => {
+        if (card.title === 'Generated Scales') {
+            onPageChange(8);
+        }
+    }
 
     return (
         <BaseLayout currentPage={3} onPageChange={onPageChange}>
@@ -21,8 +26,9 @@ function ReportsPage({ onPageChange}) {
                     const Icon = card.icon
                     return (
                         <div
+                            onClick={() => handleCard(card)}
                             key={idx}
-                            className="bg-slate-800 rounded-lg p-6 w-64 border border-slate-700"
+                            className="bg-slate-800 rounded-lg p-6 w-64 border border-slate-700 hover:border-indigo-500 transition-all duration-200 overflow-hidden cursor-pointer"
                         >
                             <Icon size={40} className="text-blue-400 mb-4" />
                             <p className="text-4xl font-bold text-slate-400 mb-2">{card.value}</p>
