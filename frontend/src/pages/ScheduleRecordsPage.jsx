@@ -21,6 +21,7 @@ function ScheduleRecordsPage({
     const [editMode, setEditMode] = useState(false);
     const [scheduleData, setScheduleData] = useState(initialScheduleEmpty);
     const days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const [schedulesCache, setShedulesCache] = useState({})
 
     const convertScheduleData = (shifts) => {
         const scheduleModified = {
@@ -45,8 +46,8 @@ function ScheduleRecordsPage({
                 }))
             });
         });
-        setScheduleData(scheduleModified);
         console.log('setou scheduleData', scheduleData)
+        return scheduleModified;
     }
 
     const formatWeekPeriod = (week) => {
@@ -67,12 +68,21 @@ function ScheduleRecordsPage({
     useEffect(() => {
         console.log('entrou useEffect')
         async function generateSchedule() {
+            if (schedulesCache[weekRecords.id]) {
+                setScheduleData(schedulesCache[weekRecords.id]);
+                return;
+            }
             try {
                 const response = await GeneratedScheduleApi.getGeneratedSchedule(weekRecords.id);
                 console.log('GeneratedScheduleApi', response.data)
                 if (response.data) {
-                    convertScheduleData(response.data.shifts);
+                    const convertedData = convertScheduleData(response.data.shifts);
+                    setScheduleData(convertedData);
                     console.log('Turnos:', response.data.shifts);
+                    setShedulesCache(prev => ({
+                        ...prev,
+                        [weekRecords.id]: convertedData
+                    }));
                 }
             } catch (error) {
                 console.error('Erro ao receber a escala:', error);
@@ -104,6 +114,17 @@ function ScheduleRecordsPage({
     const handleEdit = () => {
         setEditMode(!editMode);
     };
+
+    const handleSave = () => {
+        //TODO : implmentaar request para mandar backend a escala salva
+        console.log('antes', schedulesCache)
+        setShedulesCache(prev => ({
+            ...prev,
+            [weekRecords.id]: scheduleData
+        }));
+        console.log('salvou', scheduleData)
+        setEditMode(false);
+    }
 
     const handleBack = () => {
         onPageChange(3)
@@ -183,7 +204,6 @@ function ScheduleRecordsPage({
                         editMode={editMode}
                     />
                 </>
-
                 <div className="flex mt-4">
                     {!editMode && (
                         <div className="flex-1 justify-start flex">
@@ -200,7 +220,7 @@ function ScheduleRecordsPage({
                     <div className="justify-end flex flex-1">
                         <div className='px-2 py-1.5 rounded text-center font-medium'>
                             <button
-                                onClick={handleEdit}
+                                onClick={editMode ? handleSave : handleEdit}
                                 className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                             >
                                 {editMode ? `Save` : `Edit`}
