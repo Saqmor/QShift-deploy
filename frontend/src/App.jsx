@@ -7,6 +7,7 @@ import AvailabilityPage from './pages/AvailabilityPage.jsx';
 import ShiftConfigPage from './pages/ShiftConfigPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import GeneratedSchedule from './pages/GeneratedSchedule.jsx';
+import ScheduleRecordsPage from './pages/ScheduleRecordsPage.jsx';
 
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
@@ -20,6 +21,9 @@ function App() {
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [weekData, setWeekData] = useState(null);
+  const [weeksList, setWeeksList] = useState(null); 
+  const [weekRecords, setWeekRecords] = useState(null);
+  const [currentIdxWeek, setCurrentIdxWeek] = useState(0);
 
   const pages = [
     <LoginPage
@@ -51,7 +55,15 @@ function App() {
       isLoading={isLoading}
       setIsLoading={setIsLoading}
     />,
-    <ReportsPage onPageChange={setCurrentPage} />,
+    <ReportsPage 
+      onPageChange={setCurrentPage}
+      weeksList={weeksList} 
+      setWeeksList={setWeeksList}
+      isLoading={isLoading}
+      setIsLoading={setIsLoading}
+      setWeekRecords={setWeekRecords}
+      currentIdxWeek={currentIdxWeek}
+    />,
     <SettingsPage onPageChange={setCurrentPage} />,
     <AvailabilityPage 
       onPageChange={setCurrentPage}
@@ -73,6 +85,18 @@ function App() {
       isLoading={isLoading}
       setIsLoading={setIsLoading}
       weekData={weekData}
+    />,
+    <ScheduleRecordsPage
+      onPageChange={setCurrentPage}
+      employees={employees}
+      setEmployees={setEmployees}
+      isLoading={isLoading}
+      setIsLoading={setIsLoading}
+      weeksList={weeksList}
+      weekRecords={weekRecords}
+      setWeekRecords={setWeekRecords}
+      currentIdxWeek={currentIdxWeek}
+      setCurrentIdxWeek={setCurrentIdxWeek}
     />
   ];
 

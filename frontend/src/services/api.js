@@ -211,3 +211,9 @@ export const CalendarApi = {
         return await api.get('/weeks');
     }
 }
+
+export const ReportsApi = {
+    getWeeks: async () => {
+        return await api.get('/weeks');
+    }
+}
