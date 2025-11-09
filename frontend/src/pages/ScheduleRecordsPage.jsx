@@ -17,19 +17,19 @@ function ScheduleRecordsPage({
 
     const previousWeek = () => {
 
-    }
+    };
 
     const nextWeek = () => {
 
-    }
+    };
 
     const handleEdit = () => {
-
-    }
+        setEditMode(!editMode);
+    };
 
     const handleBack = () => {
         onPageChange(3)
-    }
+    };
 
     return (
         <BaseLayout
