@@ -21,6 +21,7 @@ function App() {
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [weekData, setWeekData] = useState(null);
+  const [weeksList, setWeeksList] = useState(null); 
 
   const pages = [
     <LoginPage
@@ -52,7 +53,12 @@ function App() {
       isLoading={isLoading}
       setIsLoading={setIsLoading}
     />,
-    <ReportsPage onPageChange={setCurrentPage} />,
+    <ReportsPage 
+      onPageChange={setCurrentPage} 
+      setWeeksList={setWeeksList}
+      isLoading={isLoading}
+      setIsLoading={setIsLoading}
+    />,
     <SettingsPage onPageChange={setCurrentPage} />,
     <AvailabilityPage 
       onPageChange={setCurrentPage}
@@ -81,6 +87,7 @@ function App() {
       setEmployees={setEmployees}
       isLoading={isLoading}
       setIsLoading={setIsLoading}
+      weeksList={weeksList}
     />
   ];
 

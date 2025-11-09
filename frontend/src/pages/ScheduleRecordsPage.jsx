@@ -14,7 +14,8 @@ function ScheduleRecordsPage({
     setIsLoading
 }) {
     const [editMode, setEditMode] = useState(false);
-
+    const [scheduleData, setScheduleData] = useState(initialScheduleEmpty);
+    
     const previousWeek = () => {
 
     };
