@@ -1,7 +1,7 @@
 import BaseLayout from '../layouts/BaseLayout';
 import Header from '../components/Header';
 import ScheduleTable from '../components/ScheduleTable';
-import { CalendarRange, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarRange, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {GeneratedScheduleApi} from '../services/api.js'
 import {initialScheduleEmpty} from '../MockData.js';
@@ -48,6 +48,21 @@ function ScheduleRecordsPage({
         setScheduleData(scheduleModified);
         console.log('setou scheduleData', scheduleData)
     }
+
+    const formatWeekPeriod = (week) => {
+        const [yearStartDate, monthStartDate, dayStartDate] = week.start_date.split('-').map(Number);
+        const startDate = new Date(yearStartDate, monthStartDate - 1, dayStartDate);
+        const endDate = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        const startMonth = months[startDate.getMonth()];
+        const endMonth = months[endDate.getMonth()];
+        
+        if (startMonth === endMonth) {
+            return `${startDate.getDate()}-${endDate.getDate()} ${startMonth} ${startDate.getFullYear()}`;
+        }
+        return `${startDate.getDate()} ${startMonth} - ${endDate.getDate()} ${endMonth} ${startDate.getFullYear()}`;
+    }
+
 
     useEffect(() => {
         console.log('entrou useEffect')
@@ -119,21 +134,29 @@ function ScheduleRecordsPage({
                 <div className="flex items-center gap-4 ml-8">
                     <button
                         onClick={previousWeek}
-                        className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+                        disabled={weeksList.length - 1 <= currentIdxWeek}
+                        className={`p-2 rounded-lg text-xonter  ${weeksList.length - 1 <= currentIdxWeek 
+                            ? `opacity-50 cursor-not-allowed` 
+                            : `hover:bg-slate-700`}`}
                         title="Previous week"
                     >
                         <ChevronLeft size={24} className="text-slate-300" />
                     </button>
+                    <div className="flex items-center gap-2 min-w-[250px] justify-center">
+                        <span className="text-lg text-slate-200 font-medium">
+                            {formatWeekPeriod(weekRecords)}
+                        </span>
+                    </div>
                     <button
                         onClick={nextWeek}
-                        className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+                        disabled={currentIdxWeek <= 0}
+                        className={`p-2 rounded-lg ${currentIdxWeek <= 0 
+                            ?  `opacity-50 cursor-not-allowed` 
+                            :  `hover:bg-slate-700`}`}
                         title="Next month"
                     >
                         <ChevronRight size={24} className="text-slate-300" />
                     </button>
-                    <span className="text-xl text-slate-200 font-medium min-w-[200px] text-center">
-                        out-nov
-                    </span>
                 </div>
             </Header>
             <div className="p-3">
