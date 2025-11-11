@@ -179,7 +179,8 @@ class ScheduleGenerator:
                 )
                 for availability in availabilities:
                     if (
-                        availability.start_time <= shift.start_time
+                        availability.weekday == shift.weekday
+                        and availability.start_time <= shift.start_time
                         and availability.end_time >= shift.end_time
                     ):
                         availability_matrix[j][i] = True
