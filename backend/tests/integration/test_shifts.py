@@ -278,8 +278,18 @@ def test_update_shift_weekday(client: TestClient, seeded_data):
     """Should update shift weekday and recalculate local_date."""
     week_id = seeded_data["week_id"]
     shifts = client.get(f"/api/v1/weeks/{week_id}/shifts").json()
-    shift_id = shifts[0]["id"]
-    original_local_date = shifts[0]["local_date"]
+    
+    shift_to_update = shifts[0]
+    shift_id = shift_to_update["id"]
+    original_local_date = shift_to_update["local_date"]
+
+    conflicting_shift = next(
+        s for s in shifts
+        if s["weekday"] == 3
+        and s["start_time"] == shift_to_update["start_time"]
+        and s["end_time"] == shift_to_update["end_time"]
+    )
+    client.delete(f"/api/v1/weeks/{week_id}/shifts/{conflicting_shift['id']}")
 
     response = client.patch(
         f"/api/v1/weeks/{week_id}/shifts/{shift_id}",

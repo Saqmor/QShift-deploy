@@ -280,7 +280,7 @@ def test_preview_schedule_respects_availabilities(client: TestClient, seeded_dat
         shifts = client.get(f"/api/v1/weeks/{week_id}/shifts").json()
 
         for schedule_shift in schedule["shifts"]:
-            shift = next(s for s in shifts if s["shift_id"] == schedule_shift["shift_id"])
+            shift = next(s for s in shifts if s["id"] == schedule_shift["shift_id"])
 
             for employee in schedule_shift["employees"]:
                 availabilities = client.get(
