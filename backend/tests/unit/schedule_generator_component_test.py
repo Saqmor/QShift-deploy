@@ -66,8 +66,13 @@ def _shift_duration_hours(start_t: time, end_t: time) -> float:
     return max(0, end_min - start_min) / 60.0
 
 
-def _hours_per_employee(schedule: schemas.ScheduleOut) -> dict:
-    """Accumulate total worked hours per employee id."""
+def _hours_per_employee(
+    schedule: schemas.ScheduleOut,
+    all_emp_ids: List[uuid.UUID] | None = None,
+    all_emp_names: List[str] | None = None,
+) -> dict:
+    """Accumulate total worked hours per employee id.
+    """
     hours = defaultdict(float)
     names = {}
 
@@ -79,6 +84,13 @@ def _hours_per_employee(schedule: schemas.ScheduleOut) -> dict:
             # Keep the latest non-empty name reference
             if getattr(emp, "name", None):
                 names[emp_id] = emp.name
+
+    if all_emp_ids is not None:
+        for i, emp_id in enumerate(all_emp_ids):
+            if emp_id not in hours:
+                hours[emp_id] = 0.0
+                if all_emp_names is not None and i < len(all_emp_names):
+                    names[emp_id] = all_emp_names[i]
 
     show = {}
     for emp_id, h in hours.items():
@@ -114,8 +126,13 @@ def _mean_std(values: List[float]) -> Tuple[float, float]:
     return mean, math.sqrt(var)
 
 
-def _print_schedule(schedule: schemas.ScheduleOut) -> None:
-    """Prints the schedule and a per-employee summary as ASCII tables."""
+def _print_schedule(
+    schedule: schemas.ScheduleOut,
+    all_emp_ids: List[uuid.UUID] | None = None,
+    all_emp_names: List[str] | None = None,
+) -> None:
+    """Prints the schedule and a per-employee summary as ASCII tables.
+    """
     day_name = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
     def fmt_time(t: time) -> str:
@@ -152,7 +169,7 @@ def _print_schedule(schedule: schemas.ScheduleOut) -> None:
         )
     _render_ascii_table(schedule_headers, schedule_rows)
 
-    per_emp = _hours_per_employee(schedule)
+    per_emp = _hours_per_employee(schedule, all_emp_ids, all_emp_names)
     sorted_items = sorted(per_emp.items(), key=lambda kv: kv[1][0].lower())
     emp_rows = []
     hours_values = []
@@ -501,7 +518,7 @@ def test_check_possibility_feasible(small_instance: ScheduleGenerator):
 def test_generate_schedule_basic_constraints(small_instance: ScheduleGenerator):
     gen = small_instance
     schedule: schemas.ScheduleOut = gen.generate_schedule()
-    _print_schedule(schedule)
+    _print_schedule(schedule, gen.employee_ids, gen.employee_names)
     _assert_basic_constraints(gen, schedule)
 
 
@@ -514,7 +531,7 @@ def test_generate_schedule_week_large_instance(week_large_instance: ScheduleGene
     gen = week_large_instance
     assert gen.check_possibility() is True
     schedule: schemas.ScheduleOut = gen.generate_schedule()
-    _print_schedule(schedule)
+    _print_schedule(schedule, gen.employee_ids, gen.employee_names)
     _assert_basic_constraints(gen, schedule)
 
 
@@ -530,7 +547,7 @@ def test_generate_schedule_week_constrained_instance(
     gen = week_constrained_instance
     assert gen.check_possibility() is True
     schedule: schemas.ScheduleOut = gen.generate_schedule()
-    _print_schedule(schedule)
+    _print_schedule(schedule, gen.employee_ids, gen.employee_names)
     _assert_basic_constraints(gen, schedule)
 
 
@@ -548,7 +565,7 @@ def test_generate_schedule_week_constrained_instance_with_shortage(
     assert gen.check_possibility() is True
 
     schedule: schemas.ScheduleOut = gen.generate_schedule()
-    _print_schedule(schedule)
+    _print_schedule(schedule, gen.employee_ids, gen.employee_names)
     _assert_basic_constraints(gen, schedule)
 
     # At least one shift must have Real < Min (negative delta).
