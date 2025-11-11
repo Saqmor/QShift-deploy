@@ -130,9 +130,12 @@ def _print_schedule(schedule: schemas.ScheduleOut) -> None:
         print("(no shift)")
         return
 
-    schedule_headers = ["Dia", "Início", "Fim", "Min", "Funcionários"]
+    # Now we also show the requested vs allocated staffing (and the delta).
+    schedule_headers = ["Dia", "Início", "Fim", "Min", "Real", "Δ (Real−Min)", "Funcionários"]
     schedule_rows = []
     for s in shifts_sorted:
+        real_staff = len(s.employees)
+        delta = real_staff - int(s.min_staff)
         employees = ", ".join(emp.name or str(emp.employee_id) for emp in s.employees)
         if not employees:
             employees = "(sem alocação)"
@@ -142,6 +145,8 @@ def _print_schedule(schedule: schemas.ScheduleOut) -> None:
                 fmt_time(s.start_time),
                 fmt_time(s.end_time),
                 str(s.min_staff),
+                str(real_staff),
+                f"{delta:+d}",
                 employees,
             ]
         )
@@ -422,6 +427,40 @@ def _build_week_constrained_instance() -> ScheduleGenerator:
     )
 
 
+def _build_week_constrained_instance_with_shortage() -> ScheduleGenerator:
+    """
+    Variant of the constrained week where some min_staff cannot be met,
+    to demonstrate the difference between requested vs. allocated staff.
+
+    Implementation detail:
+      - Based on the same employees/availability of _build_week_constrained_instance().
+      - We inflate the min_staff of Sunday evening (day=6, EVE) beyond the number of
+        employees who can actually work that slot. On Sunday EVE, only {Diego, Fabio,
+        Giovana, Helena} are available => at most 4. We set min_staff=6 there.
+    """
+    gen = _build_week_constrained_instance()
+
+    # Identify Sunday (day=6) evening (slot=2) -> index = 6*3 + 2 = 20
+    sunday_eve_idx = 6 * 3 + 2
+    # Increase min_staff to an impossible number (e.g., 6)
+    # Note: we do not change availability, only the demand target.
+    gen.shift_vector[sunday_eve_idx] = shift_domain.Shift(
+        id=gen.shift_vector[sunday_eve_idx].id,
+        weekday=gen.shift_vector[sunday_eve_idx].weekday,
+        start_time=gen.shift_vector[sunday_eve_idx].start_time,
+        end_time=gen.shift_vector[sunday_eve_idx].end_time,
+        min_staff=6,
+    )
+    # Keep ids as-is; the generator uses separate arrays for ids and domain shifts.
+    return ScheduleGenerator(
+        shift_ids=gen.shift_ids,
+        employee_ids=gen.employee_ids,
+        employee_names=gen.employee_names,
+        shift_vector=gen.shift_vector,
+        availability_matrix=gen.availability_matrix,
+    )
+
+
 # -----------------------------
 # Fixtures
 # -----------------------------
@@ -440,6 +479,11 @@ def week_large_instance():
 @pytest.fixture
 def week_constrained_instance():
     return _build_week_constrained_instance()
+
+
+@pytest.fixture
+def week_constrained_instance_with_shortage():
+    return _build_week_constrained_instance_with_shortage()
 
 
 # -----------------------------
@@ -488,3 +532,32 @@ def test_generate_schedule_week_constrained_instance(
     schedule: schemas.ScheduleOut = gen.generate_schedule()
     _print_schedule(schedule)
     _assert_basic_constraints(gen, schedule)
+
+
+@pytest.mark.unit
+def test_generate_schedule_week_constrained_instance_with_shortage(
+    week_constrained_instance_with_shortage: ScheduleGenerator,
+):
+    """
+    Constrained week where at least one shift cannot meet the requested min_staff.
+    We demonstrate the difference between requested vs. allocated staff by checking
+    that some Δ (Real−Min) is negative.
+    """
+    gen = week_constrained_instance_with_shortage
+    # Feasibility should still hold for hard constraints (availability and no overlap)
+    assert gen.check_possibility() is True
+
+    schedule: schemas.ScheduleOut = gen.generate_schedule()
+    _print_schedule(schedule)
+    _assert_basic_constraints(gen, schedule)
+
+    # At least one shift must have Real < Min (negative delta).
+    # Build a quick map from shift_id to (min_staff, real)
+    real_by_id = {s.shift_id: len(s.employees) for s in schedule.shifts}
+    has_shortage = False
+    for idx, s in enumerate(gen.shift_vector):
+        real = real_by_id[gen.shift_ids[idx]]
+        if real < int(s.min_staff):
+            has_shortage = True
+            break
+    assert has_shortage, "Expected at least one shift with Real < Min, but none found."
