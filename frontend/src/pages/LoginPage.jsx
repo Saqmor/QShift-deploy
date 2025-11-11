@@ -9,24 +9,24 @@ function LoginPage({
     isLoading,
     setIsLoading
 }) {
-    const [username, setUsername] = useState(null);
+    const [email, setEmail] = useState(null);
     const [password, setPassword] = useState(null);
 
     const handleLogin = async () => {
         setIsLoading(true);
         try {
-            const response = await LoginApi.authenticateUser(username, password);
+            const response = await LoginApi.authenticateUser(email, password);
             localStorage.setItem("user_id", response.data.user_id);
         } catch (err) {
             console.error(err);
-            if (username === DataBaseUser.username && password === DataBaseUser.password) {
+            if (email === DataBaseUser.email && password === DataBaseUser.password) {
                 localStorage.setItem("user_id", DataBaseUser.user_id);
                 onPageChange(1);
                 setIsLoading(false);
-                console.log('User logged in:', DataBaseUser.username);
+                console.log('User logged in:', DataBaseUser.email);
             }
             else {
-                alert('Invalid username or password');
+                alert('Invalid email or password');
                 setIsLoading(false);
             }
         }
@@ -54,15 +54,15 @@ function LoginPage({
             <div className="bg-slate-800 p-8 rounded-lg shadow-lg w-full max-w-md border border-slate-700">
                 <h2 className="text-2xl font-bold text-white mb-6 text-center">Login</h2>
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2" htmlFor="username">
-                        Username
+                    <label className="block text-sm font-medium text-slate-300 mb-2" htmlFor="email">
+                        email
                     </label>
                     <input
                         type="text"
-                        id="username"
-                        placeholder="Enter your username"
+                        id="email"
+                        placeholder="Enter your email"
                         className="w-full px-4 py-2 mb-4 rounded-lg bg-slate-700 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        onChange={(e) => setUsername(e.target.value)}
+                        onChange={(e) => setEmail(e.target.value)}
                     />
                 </div>
                 <div>
