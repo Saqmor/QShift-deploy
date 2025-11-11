@@ -7,8 +7,20 @@ function RegisterPage({onPageChange}) {
     const [email, setEmail] = useState(null);
     const [confEmail, setConfEmail] = useState(null);
     const [password, setPassword] = useState(null);
+    const [error, setError] = useState(null);
 
     const handleRegister = () => {
+        if (!email || !password || !confEmail) {
+            setError('Fill in all fields');
+            return;
+        } else if (email !== confEmail) {
+            setError('The emails are not the same');
+            return;
+        }
+        // TODO: api request para register:
+        //const responseRegister = RegisterApi.registerUser(email, senha);
+        //if (reponseRegister.("já tem usuário com esse email")) { setError('This email address is already in use'); return;} else {alert('User registered successfully')}
+
         onPageChange(0);
     }
 
