@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import AuthLayout from '../layouts/AuthLayout.jsx';
 import {DataBaseUser} from '../MockData.js';
 import BaseLayout from '../layouts/BaseLayout.jsx';
 import {LoginApi} from '../services/api.js';
@@ -9,8 +10,8 @@ function LoginPage({
     isLoading,
     setIsLoading
 }) {
-    const [email, setEmail] = useState(null);
-    const [password, setPassword] = useState(null);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
     const handleLogin = async () => {
         setIsLoading(true);
@@ -50,19 +51,19 @@ function LoginPage({
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-900">
-            <div className="bg-slate-800 p-8 rounded-lg shadow-lg w-full max-w-md border border-slate-700">
-                <h2 className="text-2xl font-bold text-white mb-6 text-center">Login</h2>
+        <AuthLayout title="Login">
+            <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2" htmlFor="email">
                         email
                     </label>
                     <input
-                        type="text"
+                        type="email"
                         id="email"
                         placeholder="Enter your email"
                         className="w-full px-4 py-2 mb-4 rounded-lg bg-slate-700 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         onChange={(e) => setEmail(e.target.value)}
+                        required
                     />
                 </div>
                 <div>
@@ -75,27 +76,28 @@ function LoginPage({
                         placeholder="Enter your password"
                         className="w-full px-4 py-2 mb-6 rounded-lg bg-slate-700 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         onChange={(e) => setPassword(e.target.value)}
+                        required
                     />
                 </div>
                 <button
-                    onClick={handleLogin}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
+                    type="submit"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors"
                 >
                     Enter
                 </button>
-                <div className="mt-4 text-center">
-                    <p className="text-slate-400 text-sm">
-                        Don't have an account?{' '}
-                        <button
-                            onClick={goToRegister}
-                            className="text-blue-500 hover:text-blue-400 font-medium hover:underline transition-colors cursor-pointer"
-                        >
-                            Register
-                        </button>
-                    </p>
-                </div>
+            </form>
+            <div className="mt-4 text-center">
+                <p className="text-slate-400 text-sm">
+                    Don't have an account?{' '}
+                    <button
+                        onClick={goToRegister}
+                        className="text-blue-500 hover:text-blue-400 font-medium hover:underline transition-colors cursor-pointer"
+                    >
+                        Register
+                    </button>
+                </p>
             </div>
-        </div>
+        </AuthLayout>
     );
 }
 
