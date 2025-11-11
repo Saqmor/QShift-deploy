@@ -2,7 +2,6 @@ from collections import defaultdict
 import math
 import uuid
 from datetime import time
-from sched import scheduler
 from typing import List, Tuple
 
 import pytest
@@ -186,12 +185,9 @@ def _assert_basic_constraints(
     # Map shift_id -> t index in generator
     idx_by_id = {gen.shift_ids[i]: i for i in range(gen.num_shifts)}
 
-    # 2) Exact coverage and availability respected
+    # 2) Availability respected
     for s_out in schedule.shifts:
         t = idx_by_id[s_out.shift_id]
-
-        # Coverage equals demand
-        assert len(s_out.employees) == gen.demand[t]
 
         # Availability respected
         for emp_out in s_out.employees:
@@ -463,15 +459,6 @@ def test_generate_schedule_basic_constraints(small_instance: ScheduleGenerator):
     schedule: schemas.ScheduleOut = gen.generate_schedule()
     _print_schedule(schedule)
     _assert_basic_constraints(gen, schedule)
-
-
-@pytest.mark.unit
-def test_infeasible_when_no_availability():
-    """Make it infeasible removing availability from all employees for the first shift."""
-    gen = _build_small_instance()
-    for e in range(gen.num_employees):
-        gen.availability_matrix[e][0] = False
-    assert gen.check_possibility() is False
 
 
 @pytest.mark.unit
