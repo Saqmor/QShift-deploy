@@ -19,7 +19,7 @@ def next_monday(d: date) -> date:
 def seed(db: Session = Depends(get_session), user_id=Depends(current_user_id)):
     """
     Populate (or ensure) consistent demo data for the current user.
-    - User(username='demo')
+    - User(email='demo@qshift.local')
     - 5 active employees
     - Week starting next Monday, open_days = Mon..Sat
     - Shifts 09:00-13:00 and 13:00-18:00 (min_staff=2 Mon-Fri, 3 Sat)
@@ -33,7 +33,7 @@ def seed(db: Session = Depends(get_session), user_id=Depends(current_user_id)):
     logger.info("Demo user cleared")
 
     # 1) USER
-    user = User(id=user_id, username="demo", password_hash="x")
+    user = User(id=user_id, email="demo@qshift.local", password_hash="x")
     db.add(user)
     db.flush()
     logger.info("Demo user created")
