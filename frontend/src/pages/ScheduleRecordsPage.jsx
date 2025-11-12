@@ -120,14 +120,26 @@ function ScheduleRecordsPage({
         setEditMode(!editMode);
     };
 
+    const handleShiftsSchedule = () => {
+        const shiftsSchedule = {shifts:[]};
+        days_of_week.forEach(day => {
+            if (scheduleData[day]) {
+                scheduleData[day].forEach(shift => {
+                    shiftsSchedule.shifts.push({
+                        shift_id: shift.id,
+                        employee_ids: shift.employees.map(employee => employee.id)
+                    });
+                });
+            }
+        })
+        console.log('shiftsSchedule', shiftsSchedule);
+        return shiftsSchedule;
+    }
+
+
     const handleSave = () => {
-        //TODO : implmentaar request para mandar backend a escala salva
-        console.log('antes', schedulesCache)
-        setShedulesCache(prev => ({
-            ...prev,
-            [weekRecords.id]: scheduleData
-        }));
-        console.log('salvou', scheduleData)
+        const shiftsSchedule = handleShiftsSchedule();
+
         setEditMode(false);
     }
 
