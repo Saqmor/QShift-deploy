@@ -26,6 +26,8 @@ function CalendarPage ({
         try {
         const weekResponse = await CalendarApi.getWeeks();
         setGeneratedWeeks(weekResponse.data);
+        setSelectedDays([]);
+        setSelectedWeek(null);
 
         console.log('Semanas recebidas com sucesso:', weekResponse.data);
         } catch (error) {
