@@ -17,7 +17,7 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
     });
     openDaysMask.sort((a, b) => a - b);
 
-    const [shifts, setShifts] = useState([
+    const [weekShifts, setWeekShifts] = useState([
         {
             id: 1,
             config: [
@@ -38,7 +38,7 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
     };
 
     const addTurn = () => {
-        const newShift = {
+        const newWeekShift = {
             id: Date.now(),
             config: [
                 {weekday: 0, start_time: '', end_time: '', min_staff: null},
@@ -50,22 +50,22 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
                 {weekday: 6, start_time: '', end_time: '', min_staff: null},
             ]
         }
-        setShifts([...shifts, newShift]);
-        console.log("Adicionando novo turno:", newShift);
+        setWeekShifts([...weekShifts, newWeekShift]);
+        console.log("Adicionando novo turno:", newWeekShift);
     };
 
-    const removeShift = (shiftId) => {
-        if (shifts.length > 1) {
-            setShifts(shifts.filter(shift => shift.id !== shiftId));
+    const removeShift = (weekShiftId) => {
+        if (weekShifts.length > 1) {
+            setWeekShifts(weekShifts.filter(weekShift => weekShift.id !== weekShiftId));
         }
     };
 
-    const updateShiftConfig = (shiftId, dayOfWeek, field, value) => {
-        setShifts(shifts.map(shift => {
-            if (shift.id === shiftId) {
+    const updateShiftConfig = (weekShiftId, dayOfWeek, field, value) => {
+        setWeekShifts(weekShifts.map(weekShift => {
+            if (weekShift.id === weekShiftId) {
                 return {
-                    ...shift,
-                    config: shift.config.map((dayConfig, index) => {
+                    ...weekShift,
+                    config: weekShift.config.map((dayConfig, index) => {
                         if (index === dayOfWeek) {
                             return {
                                 ...dayConfig,
@@ -76,14 +76,14 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
                     })
                 };
             }
-            return shift;
+            return weekShift;
         }));
     };
 
     const saveConfigShift = () => {
-        const configToSave = shifts.map(shift => ({
-            id: shift.id,
-            config: shift.config.map(dayConfig => ({
+        const configToSave = weekShifts.map(weekShift => ({
+            id: weekShift.id,
+            config: weekShift.config.map(dayConfig => ({
                 weekday: dayConfig.weekday,
                 start_time: dayConfig.start_time,
                 end_time: dayConfig.end_time,
@@ -98,14 +98,14 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
         const savedConfig =  localStorage.getItem('shiftConfigurations');
         if (savedConfig) {
             const parsedConfig = JSON.parse(savedConfig);
-            const restoredShifts = parsedConfig.map(shift => ({
-                ...shift,
-                config: shift.config.map(dayConfig => ({
+            const restoredShifts = parsedConfig.map(weekShift => ({
+                ...weekShift,
+                config: weekShift.config.map(dayConfig => ({
                     ...dayConfig,
                     min_staff: dayConfig.min_staff !== null ? Number(dayConfig.min_staff) : null
                 }))
             }));
-            setShifts(restoredShifts);
+            setWeekShifts(restoredShifts);
             console.log("Configurações de turno restauradas:", restoredShifts);
         } else {
             console.log("Nenhuma configuração salva encontrada.");
@@ -115,9 +115,9 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
     const handleShiftsSchedule = () => {
         let shiftsSchedule = [];
         const errors = [];
-        shifts.forEach(weekShift => {
-            weekShift.config.forEach((shift, index)=> {
-                const labelShift = `${daysOfWeek[shift.weekday]} Shift ${index + 1}`;
+        weekShifts.forEach((weekShift, weekShiftIndex)=> {
+            weekShift.config.forEach((shift)=> {
+                const labelShift = `${daysOfWeek[shift.weekday]} - Shift ${weekShiftIndex + 1}`;
                 const isDaySelected = selectedDaysMap[shift.weekday] !== undefined;
                 if (isDaySelected && (shift.start_time || shift.end_time || shift.min_staff)) {
                     const hasAnyField = shift.start_time || shift.end_time || shift.min_staff;
@@ -254,9 +254,9 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
                         </tr>
                     </thead>
                     <tbody>
-                        {shifts.map((shift) => (
+                        {weekShifts.map((weekShift) => (
                             <tr 
-                                key={shift.id}
+                                key={weekShift.id}
                                 className="border-t border-slate-700 hover:bg-slate-750"
                             >
                                 {daysOfWeek.map((day, dayIdx) => (
@@ -271,10 +271,10 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
                                                 <div className="flex gap-1">
                                                     <input
                                                         type="time"
-                                                        value={shift.config[dayIdx].start_time}
+                                                        value={weekShift.config[dayIdx].start_time}
                                                         onChange={(e) => {
                                                             updateShiftConfig(
-                                                                shift.id, 
+                                                                weekShift.id, 
                                                                 dayIdx, 
                                                                 'start_time', 
                                                                 e.target.value
@@ -285,10 +285,10 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
                                                     />
                                                     <input
                                                         type="time"
-                                                        value={shift.config[dayIdx].end_time}
+                                                        value={weekShift.config[dayIdx].end_time}
                                                         onChange={(e) => {
                                                             updateShiftConfig(
-                                                                shift.id, 
+                                                                weekShift.id, 
                                                                 dayIdx, 
                                                                 'end_time', 
                                                                 e.target.value
@@ -302,9 +302,9 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
                                                     type="number"
                                                     min="0"
                                                     max="50"
-                                                    value={shift.config[dayIdx].min_staff}
+                                                    value={weekShift.config[dayIdx].min_staff}
                                                     onChange={(e) => updateShiftConfig(
-                                                        shift.id, 
+                                                        weekShift.id, 
                                                         dayIdx, 
                                                         'min_staff', 
                                                         e.target.value
@@ -320,10 +320,10 @@ function ShiftConfigPage({onPageChange, selectedDays, startDate, setWeekData}) {
                                 ))}
                                 <td className="px-4 py-3 text-center">
                                     <button
-                                        onClick={() => removeShift(shift.id)}
-                                        disabled={shifts.length === 1}
+                                        onClick={() => removeShift(weekShift.id)}
+                                        disabled={weekShifts.length === 1}
                                         className={`p-2 rounded-lg transition-colors ${
-                                            shifts.length === 1
+                                            weekShifts.length === 1
                                                 ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                                                 : 'bg-red-600 hover:bg-red-700 text-white'
                                         }`}

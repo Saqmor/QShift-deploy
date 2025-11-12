@@ -59,11 +59,17 @@ function GeneratedSchedule({
                     console.log('Turnos:', response.data.schedule.shifts);
                 } else {
                     setIsPossible(false);
-                    alert('Não foi possível gerar uma escala viável com as configurações atuais.');
+                    alert('Não foi possível gerar uma escala viável com as configurações atuais. Verifique as configurações de turnos e funcionários.');
+                    try {
+                        await GeneratedScheduleApi.deleteSchedule(weekData.id);
+                        console.log('Semana deletada devido ao erro na geração da escala');
+                    } catch (deleteError) {
+                        console.error('Erro ao deletar semana:', deleteError);
+                    }
+                    onPageChange(1);
                 }
             } catch (error) {
                 console.error('Erro ao gerar escala:', error);
-                alert('Erro ao gerar escala. Verifique as configurações de turnos e funcionários.');
                 try {
                     await GeneratedScheduleApi.deleteSchedule(weekData.id);
                     console.log('Semana deletada devido ao erro na geração da escala');
