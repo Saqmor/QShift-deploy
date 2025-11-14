@@ -18,16 +18,12 @@ function LoginPage({
         try {
             const response = await LoginApi.authenticateUser(email, password);
             localStorage.setItem('token', response.data.access_token);
+            console.log('User logged in:', email);
+            onPageChange(1);
         } catch (err) {
             console.error(err);
-            if (email === DataBaseUser.email && password === DataBaseUser.password) {
-                localStorage.setItem("user_id", DataBaseUser.user_id);
-                onPageChange(1);
-                setIsLoading(false);
-                console.log('User logged in:', DataBaseUser.email);
-            }
-            else {
-                alert('Invalid email or password');
+            if (err.response && err.response.status === 401) {
+                alert(err.response.data.detail || 'Invalid email or password');
                 setIsLoading(false);
             }
         }
