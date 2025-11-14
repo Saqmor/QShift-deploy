@@ -21,9 +21,9 @@ function RegisterPage({onPageChange}) {
             setError('The emails are not the same');
             return;
         }
-        
+
         try {
-            const responseRegister = await RegisterApi.registerUser(email, senha);
+            const responseRegister = await RegisterApi.registerUser(email, password);
             if (responseRegister.data) {
                 alert('User registered successfully');
                 onPageChange(0);
