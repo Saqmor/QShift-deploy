@@ -17,7 +17,7 @@ function LoginPage({
         setIsLoading(true);
         try {
             const response = await LoginApi.authenticateUser(email, password);
-            localStorage.setItem("user_id", response.data.user_id);
+            localStorage.setItem('token', response.data.access_token);
         } catch (err) {
             console.error(err);
             if (email === DataBaseUser.email && password === DataBaseUser.password) {
