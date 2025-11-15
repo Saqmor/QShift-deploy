@@ -17,6 +17,7 @@ function GeneratedSchedule({
     const [editMode, setEditMode] = useState(false);
     const [isPossible, setIsPossible] = useState(true);
     const days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const convertScheduleData = (shifts) => {
         const scheduleModified = {
@@ -58,11 +59,24 @@ function GeneratedSchedule({
                     console.log('Turnos:', response.data.schedule.shifts);
                 } else {
                     setIsPossible(false);
-                    alert('Não foi possível gerar uma escala viável com as configurações atuais.');
+                    alert('Não foi possível gerar uma escala viável com as configurações atuais. Verifique as configurações de turnos e funcionários.');
+                    try {
+                        await GeneratedScheduleApi.deleteSchedule(weekData.id);
+                        console.log('Semana deletada devido ao erro na geração da escala');
+                    } catch (deleteError) {
+                        console.error('Erro ao deletar semana:', deleteError);
+                    }
+                    onPageChange(1);
                 }
             } catch (error) {
                 console.error('Erro ao gerar escala:', error);
-                alert('Erro ao gerar escala. Verifique as configurações de turnos e funcionários.');
+                try {
+                    await GeneratedScheduleApi.deleteSchedule(weekData.id);
+                    console.log('Semana deletada devido ao erro na geração da escala');
+                } catch (deleteError) {
+                    console.error('Erro ao deletar semana:', deleteError);
+                }
+                onPageChange(1);
             } finally {
                 setIsLoading(false);
             }
@@ -115,6 +129,13 @@ function GeneratedSchedule({
             onPageChange(1);
         } catch (error) {
             console.error('Erro ao aprovar a escala:', error);
+            alert('Erro ao aprovar a escala. A semana será removida.');
+            try {
+                await GeneratedScheduleApi.deleteSchedule(weekData.id);
+                console.log('Semana deletada devido ao erro na aprovação');
+            } catch (deleteError) {
+                console.error('Erro ao deletar semana:', deleteError);
+            }
             onPageChange(1);
         }};
 
