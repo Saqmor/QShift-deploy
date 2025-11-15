@@ -138,23 +138,22 @@ function ScheduleRecordsPage({
 
 
     const handleSave = async () => {
-        /*setIsLoading(true);
+        setIsLoading(true);
         try {
             const shiftsSchedule = handleShiftsSchedule();
             await GeneratedScheduleApi.deleteShiftsSchedule(weekRecords.id);
-            await GeneratedScheduleApi.approvedSchedule(weekRecords.id, shiftsSchedule);
             setSchedulesCache(prev => ({
                 ...prev,
                 [weekRecords.id] : scheduleData
             }))
-
+            await GeneratedScheduleApi.approvedSchedule(weekRecords.id, shiftsSchedule);
             setEditMode(false);
         } catch (error) {
             console.error('Erro ao salvar a escala:', error);
             throw error;
         } finally {
             setIsLoading(false);
-        }*/
+        }
 
         setEditMode(false);
     }
