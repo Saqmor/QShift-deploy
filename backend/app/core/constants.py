@@ -2,5 +2,5 @@ import uuid
 
 MAX_EMPLOYEE_NAME_LENGTH = 120
 DEMO_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
-DEMO_EMAIL = "demo@qshift.local"
+DEMO_EMAIL = "demo@qshift.com"
 DEMO_PASSWORD = "123"

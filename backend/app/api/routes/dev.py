@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import date, time, timedelta
 
 from app.core.db import get_session
-from app.core.security import create_access_token, hash_password
+from app.core.security import hash_password
 from app.models import User, Employee, Week, Shift, Availability
 from app.core.logging import logger
 from app.core.constants import DEMO_USER_ID, DEMO_EMAIL, DEMO_PASSWORD
@@ -38,7 +38,6 @@ def seed(db: Session = Depends(get_session)):
     )
     db.add(user)
     db.flush()
-    access_token = create_access_token(sub=str(user.id))
     logger.info("Demo user created")
 
     # 2) EMPLOYEES
@@ -107,7 +106,6 @@ def seed(db: Session = Depends(get_session)):
 
     return {
         "user_id": str(user.id),
-        "access_token": access_token,
         "week_id": str(week.id),
         "week_start": str(week.start_date),
         "open_days": week.open_days,
