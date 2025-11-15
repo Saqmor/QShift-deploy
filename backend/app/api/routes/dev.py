@@ -1,6 +1,5 @@
 from __future__ import annotations
 from fastapi import APIRouter, Depends, status
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 from datetime import date, time, timedelta
 
@@ -8,11 +7,9 @@ from app.core.db import get_session
 from app.core.security import create_access_token, hash_password
 from app.models import User, Employee, Week, Shift, Availability
 from app.core.logging import logger
+from app.core.constants import DEMO_USER_ID, DEMO_EMAIL, DEMO_PASSWORD
 
 router = APIRouter(prefix="/dev", tags=["dev"])
-
-DEMO_EMAIL = "demo@test.com"
-DEMO_PASSWORD = "123"
 
 
 def next_monday(d: date) -> date:
@@ -23,7 +20,6 @@ def next_monday(d: date) -> date:
 def seed(db: Session = Depends(get_session)):
     """
     Populate (or ensure) consistent demo data for the demo user.
-    - User(email='demo@qshift.local')
     - 5 active employees
     - Week starting next Monday, open_days = Mon..Sat
     - Shifts 09:00-13:00 and 13:00-18:00 (min_staff=2 Mon-Fri, 3 Sat)
@@ -33,13 +29,13 @@ def seed(db: Session = Depends(get_session)):
     logger.info(f"Seeding started")
 
     # 0) Clear demo user
-    db.query(User).filter(func.lower(User.email) == DEMO_EMAIL).delete(
-        synchronize_session=False
-    )
+    db.query(User).filter(User.id == DEMO_USER_ID).delete(synchronize_session=False)
     logger.info("Demo user cleared")
 
     # 1) USER
-    user = User(email=DEMO_EMAIL, password_hash=hash_password(DEMO_PASSWORD))
+    user = User(
+        id=DEMO_USER_ID, email=DEMO_EMAIL, password_hash=hash_password(DEMO_PASSWORD)
+    )
     db.add(user)
     db.flush()
     access_token = create_access_token(sub=str(user.id))
@@ -65,7 +61,7 @@ def seed(db: Session = Depends(get_session)):
     db.flush()
     logger.info("Seed week created")
 
-    # 4) WEEK SHIFTS
+    # 4) SHIFTS
     for wd in week.open_days:  # according to your Week.open_days (int[] 0..6)
         # ensure local_date is consistent with the week
         local_date = start + timedelta(days=wd)
