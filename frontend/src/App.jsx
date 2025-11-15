@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage.jsx';
 import GeneratedSchedule from './pages/GeneratedSchedule.jsx';
 import ScheduleRecordsPage from './pages/ScheduleRecordsPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
+import EmployeeReportsPage from './pages/EmployeeReportsPage.jsx';
 
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
@@ -102,7 +103,12 @@ function App() {
     />,
     <RegisterPage
       onPageChange={setCurrentPage}
-    /> 
+    />,
+    <EmployeeReportsPage
+      onPageChange={setCurrentPage}
+      isLoading={isLoading}
+      setLoading={setIsLoading}
+    />
   ];
 
   return pages[currentPage];

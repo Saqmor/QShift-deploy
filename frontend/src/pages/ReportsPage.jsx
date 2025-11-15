@@ -40,6 +40,8 @@ function ReportsPage({
             setWeekRecords(weeksList[currentIdxWeek]);
             setIsLoading(true);
             onPageChange(8);
+        } else if (card.title === 'Employees') {
+            onPageChange(10);
         }
     }
 
