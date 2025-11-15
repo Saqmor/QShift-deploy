@@ -11,8 +11,7 @@ function EmployeeSelector({
     year
 }) {
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-      <div className='bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full border border-slate-700'>
+      <div className='bg-slate-800 p-6 rounded-lg shadow-xl max-w-md border border-slate-700'>
         <div className='flex items-center justify-between mb-4'>
           <h3 className='text-xl font-bold text-slate-200'>Employees</h3>
         </div>
@@ -28,14 +27,12 @@ function EmployeeSelector({
               >
                 <div className='flex items-center justify-between'>
                   <span className='font-medium'>{emp.name}</span>
-                  {isSelected && <Check size={20}/>}
                 </div>
               </button>
             );
           })}
         </div>
       </div>
-    </div>
   );
 }
 
@@ -44,6 +41,20 @@ function EmployeeReportsPage({
     isLoading,
     setLoading
 }) {
+    // Dados mockados para demonstração
+    const [month, setMonth] = useState(new Date().getMonth() + 1);
+    const [year, setYear] = useState(new Date().getFullYear());
+    const employeesList = [
+        {id: 1, name: "employee x"}
+    ];
+
+
+    const [currentEmployee, setCurrentEmployee] = useState(employeesList[0]);
+    const handleToggleEmployee = (employee, month, year) => {
+        console.log("Selecionando relatório do funcionário:", employee, month, year);
+        setCurrentEmployee(employee);
+        // No futuro vou implmentar um fetch para pegar os dados estatísticos do funcionário selecionado e vou vou tornar essa função assíncrona
+    }
     return (
         <BaseLayout 
             showSidebar={false}
@@ -55,26 +66,29 @@ function EmployeeReportsPage({
                         {"< month >    < year >"}
                     </div>
             </Header>
-            <div className='flex gap-8 p-8'>
-                <div className=' w-1/6'>
-                    <div className=' mb-4 font-bold text-lg'>
-                        Employees
-                    </div>
-
-                    {/* Para cada funcionário fazer um botão para seleção do relatório do funcionário atual*/}
-                    <div className=' mb-2 p-2 bg-slate-700 rounded-lg hover:bg-slate-600 cursor-pointer'>
-                        Employee X
-                    </div>
-                </div>
-
+            <div className='flex gap-8 p-2'>
+                <EmployeeSelector
+                    employeesList={employeesList}
+                    currentEmployee={currentEmployee}
+                    onToggleEmployee={handleToggleEmployee}
+                    month={month}
+                    year={year}
+                />
                 <div className=''>
-
-                    <div className='flex gap-4 flex-wrap'>
+                    <div className='flex gap-2 flex-wrap'>
                         {/* Aqui dentro colocar as quatro estatísticas de dados interassantes em formas de cards: 
                         Número de folgas no mês, dias trabalhados no mês, 
                         números de turnos de manhã, 
                         números de turnos da tarde
                          */}
+
+                        {/* Exemplo de card */}
+                        <div
+                            className="bg-slate-800 rounded-lg p-3 w-48 border border-slate-700 overflow-hidden"
+                        >
+                            <p className="text-sm text-slate-500">title</p>
+                            <p className="text-4xl font-bold text-slate-400 mb-2">Value</p>
+                        </div>
                     </div>
 
                     <div className='mt-8'>
