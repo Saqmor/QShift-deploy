@@ -2,12 +2,21 @@ import React from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
-    LinearScale,
-    BarElement } from 'chart.js';
+  CategoryScale, 
+  LinearScale,
+  BarElement,
+  Title,           
+  Tooltip,       
+  Legend            
+} from 'chart.js';
 
 ChartJS.register(
-    LinearScale,
-    BarElement
+  CategoryScale,  
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
 );
 
 const BarChart = ({ data, options }) => {
