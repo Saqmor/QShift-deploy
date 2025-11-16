@@ -54,7 +54,7 @@ class EmployeeOut(EmployeeBase):
 
 class EmployeeYearReport(BaseModel):
     name: str | None = Field(None, max_length=constants.MAX_EMPLOYEE_NAME_LENGTH)
-    months_data: List[EmployeeMonthReport]
+    months_data: List[EmployeeMonthData]
 
 
 class EmployeeMonthReport(BaseModel):

@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage.jsx';
 import GeneratedSchedule from './pages/GeneratedSchedule.jsx';
 import ScheduleRecordsPage from './pages/ScheduleRecordsPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
+import EmployeeReportsPage from './pages/EmployeeReportsPage.jsx';
 
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
@@ -25,6 +26,7 @@ function App() {
   const [weeksList, setWeeksList] = useState(null); 
   const [weekRecords, setWeekRecords] = useState(null);
   const [currentIdxWeek, setCurrentIdxWeek] = useState(0);
+  const [currentEmployee, setCurrentEmployee] = useState(null);
 
   const pages = [
     <LoginPage
@@ -64,6 +66,8 @@ function App() {
       setIsLoading={setIsLoading}
       setWeekRecords={setWeekRecords}
       currentIdxWeek={currentIdxWeek}
+      setCurrentEmployee={setCurrentEmployee}
+      employees={employees}
     />,
     <SettingsPage onPageChange={setCurrentPage} />,
     <AvailabilityPage 
@@ -102,7 +106,15 @@ function App() {
     />,
     <RegisterPage
       onPageChange={setCurrentPage}
-    /> 
+    />,
+    <EmployeeReportsPage
+      onPageChange={setCurrentPage}
+      isLoading={isLoading}
+      setIsLoading={setIsLoading}
+      employeesList={employees}
+      currentEmployee={currentEmployee}
+      setCurrentEmployee={setCurrentEmployee}
+    />
   ];
 
   return pages[currentPage];

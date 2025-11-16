@@ -11,7 +11,9 @@ function ReportsPage({
     isLoading,
     setIsLoading,
     setWeekRecords,
-    currentIdxWeek
+    currentIdxWeek,
+    setCurrentEmployee,
+    employees
 }) {
     useEffect(() => {
         setIsLoading(true);
@@ -40,6 +42,10 @@ function ReportsPage({
             setWeekRecords(weeksList[currentIdxWeek]);
             setIsLoading(true);
             onPageChange(8);
+        } else if (card.title === 'Employees') {
+            setIsLoading(true);
+            setCurrentEmployee(employees[0]);
+            onPageChange(10);
         }
     }
 
