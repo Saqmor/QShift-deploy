@@ -280,18 +280,10 @@ function EmployeeReportsPage({
                         </div>
                     </div>
 
-                    <div className='mt-8'>
-                        <div className='mb-4'>
-                            Uma toolbar para seleção do do dado a ser exibido no gráfico
-                        </div>
-                        <div className=''>
-                            Gráfico de barras mostrando: 
-                            Dias trablahados no mês ||
-                            Horas trabalhadas no mês ||
-                            Folgas no mês ||
-                            Turnos da manha no mês ||
-                            Turnos da tarde no mês
-                        </div>
+                    <div className='mt-2 bg-slate-800 rounded-lg border border-slate-700'>
+                        <h3 className='text-xl font-bold text-slate-200 px-6 py-2 border-b border-slate-700'>
+                            {METRIC_TITLES[selectedMetric]} - {currentYear}
+                        </h3>
                     </div>
                 </div>
             </div>
