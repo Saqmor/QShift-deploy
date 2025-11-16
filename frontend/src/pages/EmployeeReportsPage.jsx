@@ -40,15 +40,15 @@ function EmployeeSelector({
 function EmployeeReportsPage({
     onPageChange,
     isLoading,
-    setLoading
+    setLoading,
+    employeesList,
+    currentEmployee,
+    setCurrentEmployee
 }) {
     // Dados mockados para demonstração
     const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     const [selectedMetric, setSelectedMetric] = useState('daysWorked');
-    const employeesList = [
-        {id: 1, name: "employee x"}
-    ];
 
     const [employeeStats, setEmployeeStats] = useState({
         name: "employee x",
@@ -86,8 +86,7 @@ function EmployeeReportsPage({
         ? `${employeeStats.month_data[config.key]}${config.suffix}` 
         : employeeStats.month_data[config.key]
     }));
-
-    const [currentEmployee, setCurrentEmployee] = useState(employeesList[0]);
+    
     const handleToggleEmployee = (employee, month, year) => {
         console.log("Selecionando relatório do funcionário:", employee, month, year);
         setCurrentEmployee(employee);
@@ -175,7 +174,7 @@ function EmployeeReportsPage({
                     </button>
                 </div>
             </Header>
-            <div className='flex gap-8 p-2'>
+            <div className='flex gap-5'>
                 <EmployeeSelector
                     employeesList={employeesList}
                     currentEmployee={currentEmployee}
@@ -184,7 +183,7 @@ function EmployeeReportsPage({
                     year={currentYear}
                 />
                 <div className='flex-1'>
-                    <div className='flex gap-4 flex-wrap mb-8'>
+                    <div className='flex gap-2 flex-wrap mb-5'>
                         {statsCards.map(card => (
                             <div 
                                 key={card.key}
