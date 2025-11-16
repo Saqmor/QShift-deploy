@@ -70,13 +70,28 @@ function EmployeeReportsPage({
         ]
     };
 
+    const convertEmployeeStatsFormat = (stats) => {
+        return {
+            name: stats.name,
+            monthsData: stats.months_data.map(monthData => ({
+                hoursWorked: monthData.hours_worked,
+                daysOff: monthData.num_days_off,
+                daysWorked: monthData.num_days_worked,
+                monrningShifts: monthData.num_morning_shifts,
+                afternoonShifts: monthData.num_afternoon_shifts,
+                nightShifts: monthData.num_night_shifts
+            }))
+        };
+    }
+
     const createStatsCards = (employeeStats) => {
+        const employeeStatsFormatted = convertEmployeeStatsFormat(employeeStats);
         return STATS_CONFIG.map(config => ({
             ...config,
             ...METRIC_COLORS[config.key],
             value: config.suffix 
-                ? `${employeeStats.months_data[currentMonth - 1][config.key]}${config.suffix}` 
-                : employeeStats.months_data[currentMonth - 1][config.key]
+                ? `${employeeStatsFormatted.monthsData[currentMonth - 1][config.key]}${config.suffix}` 
+                : employeeStatsFormatted.monthsData[currentMonth - 1][config.key]
         }));
     }
 
