@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import AuthLayout from '../layouts/AuthLayout.jsx';
+import {RegisterApi} from '../services/api.js'
 import {DataBaseUser} from '../MockData.js';
 import BaseLayout from '../layouts/BaseLayout.jsx';
 
@@ -10,7 +11,7 @@ function RegisterPage({onPageChange}) {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
         setError('');
         if (!email || !password || !confEmail) {
@@ -20,11 +21,21 @@ function RegisterPage({onPageChange}) {
             setError('The emails are not the same');
             return;
         }
-        // TODO: api request para register:
-        //const responseRegister = RegisterApi.registerUser(email, senha);
-        //if (reponseRegister.("já tem usuário com esse email")) { setError('This email address is already in use'); return;} else {alert('User registered successfully')}
 
-        onPageChange(0);
+        try {
+            const responseRegister = await RegisterApi.registerUser(email, password);
+            if (responseRegister.data) {
+                alert('User registered successfully');
+                onPageChange(0);
+            }
+        } catch (error) {
+            if (error.response?.data?.detail === "Email already registered") {
+                setError("Email already registered");
+            } else {
+                setError("Error registering user. Please try again.");
+            }
+            console.error('Registration error:', error.response?.data);
+        }
     }
 
     const goToLogin = () => {

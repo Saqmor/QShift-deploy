@@ -2,13 +2,19 @@
 fastapi
 uvicorn[standard]
 
+# Authentication
+PyJWT
+passlib[bcrypt]
+bcrypt>=4.0.0,<5.0.0
+python-multipart
+
 # Database
 sqlalchemy
 psycopg[binary]
 alembic
 
 # Config
-pydantic
+pydantic[email]
 pydantic-settings
 python-dotenv
 
