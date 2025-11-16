@@ -230,7 +230,7 @@ export const ReportsApi = {
 export const EmployeeReportsApi = {
     getEmployeeYearStats: async (employee_id, year) => {
         try {
-            return await api.get(`/employees/${employee_id}/report`, year);
+            return await api.get(`/employees/${employee_id}/report/${year}`);
         } catch (error) {
             console.error('Erro ao buscar relatório anual do funcionário:', error);
             throw error;
@@ -239,7 +239,7 @@ export const EmployeeReportsApi = {
 
     getEmployeeMonthStats: async (employee_id, month, year) => {
         try {
-            return await api.get(`/employees/${employee_id}/report`, { month, year });
+            return await api.get(`/employees/${employee_id}/report/${year}/${month}`);
         } catch (error) {
             console.error('Erro ao buscar relatório mensal do funcionário:', error);
             throw error;
