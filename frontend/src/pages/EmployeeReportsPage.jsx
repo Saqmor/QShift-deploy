@@ -51,6 +51,7 @@ function EmployeeReportsPage({
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     const [selectedMetric, setSelectedMetric] = useState('daysWorked');
     const [employeeYearStats, setEmployeeYearStats] = useState(null);
+    const [statsCards, setStatsCards] = useState([]);
 
     const employaeeYearStats = {
         name: "employee x",
@@ -69,6 +70,16 @@ function EmployeeReportsPage({
         ]
     };
 
+    const createStatsCards = () => {
+        return STATS_CONFIG.map(config => ({
+            ...config,
+            ...METRIC_COLORS[config.key],
+            value: config.suffix 
+                ? `${employaeeYearStats.months_data[currentMonth - 1].month_data[config.key]}${config.suffix}` 
+                : employaeeYearStats.months_data[currentMonth - 1].month_data[config.key]
+        }));
+    }
+
     useEffect(() => {
         if (!currentEmployee && employeesList.length > 0) {
             setCurrentEmployee(employeesList[0]);
@@ -81,6 +92,8 @@ function EmployeeReportsPage({
                     currentYear
                 );
                 setEmployeeYearStats(response.data);
+                const statsCards = createStatsCards();
+                setStatsCards(statsCards);
                 console.log('Estatísticas do funcionário recebidas com sucesso:', response.data);
             } catch (error) {
                 console.error('Erro ao buscar estatísticas do funcionário:', error);
@@ -92,14 +105,6 @@ function EmployeeReportsPage({
             fetchEmployeeStats();
         }
     }, [currentEmployee, currentYear]);
-
-    const statsCards = STATS_CONFIG.map(config => ({
-    ...config,
-    ...METRIC_COLORS[config.key],
-    value: config.suffix 
-        ? `${employeeYearStats.months_data[currentMonth - 1].month_data[config.key]}${config.suffix}` 
-        : employeeYearStats.months_data[currentMonth - 1].month_data[config.key]
-    }));
 
     const handleToggleEmployee = (employee, month, year) => {
         console.log("Selecionando relatório do funcionário:", employee, month, year);
@@ -137,6 +142,19 @@ function EmployeeReportsPage({
     const handleNextYear = () => {
         setCurrentYear(currentYear + 1);
     };
+
+    if (isLoading) {
+        return (
+            <BaseLayout showSidebar={false} currentPage={8} onPageChange={onPageChange}>
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-slate-400">Loading...</p>
+                    </div>
+                </div>
+            </BaseLayout>
+        );
+    }
 
     return (
         <BaseLayout 
