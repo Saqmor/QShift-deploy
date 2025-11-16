@@ -1,6 +1,6 @@
 // Color and style settings for employee metrics
 export const METRIC_COLORS = {
-  daysOff: {
+  num_days_off: {
     color: 'blue',
     borderColor: 'border-blue-500',
     textColor: 'text-blue-400',
@@ -8,7 +8,7 @@ export const METRIC_COLORS = {
     bgInactive: 'bg-blue-600',
     bgButton: 'bg-blue-600'
   },
-  daysWorked: {
+  num_days_worked: {
     color: 'green',
     borderColor: 'border-green-500',
     textColor: 'text-green-400',
@@ -16,7 +16,7 @@ export const METRIC_COLORS = {
     bgInactive: 'bg-green-600',
     bgButton: 'bg-green-600'
   },
-  hoursWorked: {
+  hours_worked: {
     color: 'purple',
     borderColor: 'border-purple-500',
     textColor: 'text-purple-400',
@@ -24,7 +24,7 @@ export const METRIC_COLORS = {
     bgInactive: 'bg-purple-600',
     bgButton: 'bg-purple-600'
   },
-  morningShifts: {
+  num_morning_shifts: {
     color: 'yellow',
     borderColor: 'border-yellow-500',
     textColor: 'text-yellow-400',
@@ -32,7 +32,7 @@ export const METRIC_COLORS = {
     bgInactive: 'bg-yellow-600',
     bgButton: 'bg-yellow-600'
   },
-  afternoonShifts: {
+  num_afternoon_shifts: {
     color: 'orange',
     borderColor: 'border-orange-500',
     textColor: 'text-orange-400',
@@ -44,18 +44,18 @@ export const METRIC_COLORS = {
 
 // Card configuration (structure, labels)
 export const STATS_CONFIG = [
-  { key: 'daysOff', label: 'Days Off' },
-  { key: 'daysWorked', label: 'Days Worked' },
-  { key: 'hoursWorked', label: 'Hours Worked', suffix: 'h' },
-  { key: 'morningShifts', label: 'Morning Shifts' },
-  { key: 'afternoonShifts', label: 'Afternoon Shifts' }
+  { key: 'num_days_off', label: 'Days Off' },
+  { key: 'num_days_worked', label: 'Days Worked' },
+  { key: 'hours_worked', label: 'Hours Worked', suffix: 'h' },
+  { key: 'num_morning_shifts', label: 'Morning Shifts' },
+  { key: 'num_afternoon_shifts', label: 'Afternoon Shifts' }
 ];
 
 // Chart titles
 export const METRIC_TITLES = {
-  daysWorked: 'Days Worked per Month',
-  hoursWorked: 'Hours Worked per Month',
-  daysOff: 'Days Off per Month',
-  morningShifts: 'Morning Shifts per Month',
-  afternoonShifts: 'Afternoon Shifts per Month'
+  num_days_worked: 'Days Worked per Month',
+  hours_worked: 'Hours Worked per Month',
+  num_days_off: 'Days Off per Month',
+  num_morning_shifts: 'Morning Shifts per Month',
+  num_afternoon_shifts: 'Afternoon Shifts per Month'
 };
