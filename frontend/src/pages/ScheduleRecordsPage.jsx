@@ -4,7 +4,7 @@ import ScheduleTable from '../components/ScheduleTable';
 import { CalendarRange, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {GeneratedScheduleApi} from '../services/api.js'
-import {initialScheduleEmpty, week} from '../MockData.js';
+import {initialScheduleEmpty} from '../MockData.js';
 
 function ScheduleRecordsPage({
     onPageChange,
