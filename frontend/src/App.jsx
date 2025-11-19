@@ -41,7 +41,6 @@ function App() {
           path="/login" 
           element={
             <LoginPage
-              onPageChange={setCurrentPage}
               isLoading={isLoading}
               setIsLoading={setIsLoading}
             />
