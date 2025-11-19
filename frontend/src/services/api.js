@@ -23,7 +23,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             alert('Session expired. Please log in again.');
             localStorage.removeItem("access_token");
-            navigate('/login');
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }
