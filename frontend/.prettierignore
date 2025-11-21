@@ -1,0 +1,30 @@
+# Dependências
+node_modules/
+
+# Builds
+dist/
+build/
+coverage/
+
+# Ambiente
+.env
+.env.*  
+
+# Logs
+*.log
+
+# Gerados por sistema
+package-lock.json
+yarn.lock
+
+# Configs do projeto
+.next/
+out/
+
+# Backups e temporários
+*.cache/
+*.tmp/
+
+# Banco local
+*.sqlite
+*.db
