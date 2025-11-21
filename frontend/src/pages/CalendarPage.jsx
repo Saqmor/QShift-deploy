@@ -134,7 +134,7 @@ function CalendarPage({
       currentPage={2}
     >
       <Header title="Calendar" icon={Calendar}>
-        <div className="flex items-center gap-4 ml-8">
+        <div className="flex items-center gap-4">
           <button
             onClick={handlePrevMonth}
             className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
@@ -166,26 +166,22 @@ function CalendarPage({
         onToggleWeek={toggleWeek}
         generatedWeeks={generatedWeeks}
       />
-      <div className="flex mt-4">
-        <div className="flex-1 justify-start flex">
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            Back
-            <ArrowLeft size={20} />
-          </button>
-        </div>
+      <div className="flex gap-4 mt-4">
+        <button
+          onClick={handleBack}
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium w-full sm:w-auto"
+        >
+          <ArrowLeft size={20} />
+          Back
+        </button>
 
-        <div className="justify-end flex flex-1">
-          <button
-            onClick={handleAdvance}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            Next
-            <ArrowRight size={20} />
-          </button>
-        </div>
+        <button
+          onClick={handleAdvance}
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium w-full sm:w-auto sm:ml-auto"
+        >
+          Next
+          <ArrowRight size={20} />
+        </button>
       </div>
     </BaseLayout>
   );
