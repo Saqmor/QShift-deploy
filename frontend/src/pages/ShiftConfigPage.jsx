@@ -240,8 +240,9 @@ function ShiftConfigPage({
         };
         setWeekData(week);
         console.log('Criando escala prévia:', week, shiftsSchedule);
-        const responsePreviewSchedule =
-          await GeneratedScheduleApi.generateSchedulePreview(shiftsSchedule);
+        const responsePreviewSchedule = await GeneratedScheduleApi.generateSchedulePreview({
+          shift_vector: shiftsSchedule,
+        });
         const preciewScheduleData = responsePreviewSchedule.data;
 
         if (preciewScheduleData.possible && preciewScheduleData.schedule) {
