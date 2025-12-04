@@ -42,7 +42,7 @@ class ScheduleShiftCreate(BaseModel):
 
 class SchedulePreviewOut(BaseModel):
     possible: bool
-    schedule: Optional[ScheduleOut] = None
+    schedule: Optional[PreviewScheduleOut] = None
 
 class PreviewScheduleOut(BaseModel):
     shifts: List[PreviewScheduleShiftOut]
