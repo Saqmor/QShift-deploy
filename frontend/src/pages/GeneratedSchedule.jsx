@@ -4,14 +4,23 @@ import ScheduleTable from '../components/ScheduleTable';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GeneratedScheduleApi } from '../services/api.js';
-import { initialScheduleEmpty } from '../constants/schedule.js';
-import { usePrompt } from '../hooks/usePrompt.js';
+import { ShiftConfigApi } from '../services/api.js';
 
-function GeneratedSchedule({ employees, setEmployees, isLoading, setIsLoading, weekData }) {
+function GeneratedSchedule({
+  employees,
+  setEmployees,
+  isLoading,
+  setIsLoading,
+  weekData,
+  setWeekData,
+  shiftsData,
+  setShiftsData,
+  previewSchedule,
+  setPreviewSchedule,
+}) {
   const navigate = useNavigate();
-  const [scheduleData, setScheduleData] = useState(initialScheduleEmpty);
+  const [scheduleData, setScheduleData] = useState(previewSchedule);
   const [editMode, setEditMode] = useState(false);
-  const [isPossible, setIsPossible] = useState(true);
   const days_of_week = [
     'monday',
     'tuesday',
@@ -21,115 +30,17 @@ function GeneratedSchedule({ employees, setEmployees, isLoading, setIsLoading, w
     'saturday',
     'sunday',
   ];
-  const previewStatusRef = useRef({
-    isPersisted: false,
-    isDeleted: false,
-  });
-
-  const cleanupPreview = useCallback(async () => {
-    if (
-      !weekData?.id ||
-      previewStatusRef.current.isPersisted ||
-      previewStatusRef.current.isDeleted
-    ) {
-      return;
-    }
-    try {
-      previewStatusRef.current.isDeleted = true;
-      await GeneratedScheduleApi.deleteSchedule(weekData?.id);
-      console.log('Preview deletado com sucesso');
-    } catch (error) {
-      console.error('Erro ao deletar preview:', error);
-      previewStatusRef.current.isDeleted = true;
-    }
-  }, [weekData?.id]);
-
-  const shouldBlockNavigation =
-    weekData?.id && !previewStatusRef.current.isPersisted && !previewStatusRef.current.isDeleted;
-
-  const markPreviewAsPersisted = useCallback(() => {
-    previewStatusRef.current.isPersisted = true;
-  }, []);
-
-  usePrompt(shouldBlockNavigation, cleanupPreview);
-
-  const convertScheduleData = (shifts) => {
-    let scheduleModified = {
-      monday: [],
-      tuesday: [],
-      wednesday: [],
-      thursday: [],
-      friday: [],
-      saturday: [],
-      sunday: [],
-    };
-    shifts.forEach((shift) => {
-      const dayName = days_of_week[shift.weekday];
-      scheduleModified[dayName].push({
-        id: shift.shift_id,
-        startTime: shift.start_time.slice(0, 5),
-        endTime: shift.end_time.slice(0, 5),
-        minEmployees: shift.min_staff,
-        employees: shift.employees.map((emp) => ({
-          id: emp.employee_id,
-          name: emp.name,
-        })),
-      });
-    });
-    days_of_week.forEach((day) => {
-      scheduleModified[day].sort((a, b) => {
-        if (a.startTime < b.startTime) return -1;
-        if (a.startTime > b.startTime) return 1;
-        if (a.endTime < b.endTime) return -1;
-        if (a.endTime > b.endTime) return 1;
-
-        return 0;
-      });
-    });
-    setScheduleData(scheduleModified);
-  };
 
   useEffect(() => {
-    async function generateSchedule() {
-      setIsLoading(true);
-      try {
-        const response = await GeneratedScheduleApi.generateSchedulePreview(weekData.id);
-        if (response.data.possible && response.data.schedule) {
-          convertScheduleData(response.data.schedule.shifts);
-          setIsPossible(true);
-          console.log('A escala criada:', response.data.schedule);
-        } else {
-          setIsPossible(false);
-          alert(
-            'Não foi possível gerar uma escala viável com as configurações atuais. Verifique as configurações de turnos e funcionários.',
-          );
-          await cleanupPreview();
-          navigate('/staff');
-        }
-      } catch (error) {
-        console.error('Erro ao gerar escala:', error);
-        await cleanupPreview();
-        navigate('/staff');
-      } finally {
-        setIsLoading(false);
-      }
+    if (isLoading) {
+      setIsLoading(false);
     }
-
-    if (weekData.id) {
-      generateSchedule();
-    }
-  }, [weekData.id, cleanupPreview]);
+  }, []);
 
   const handleCancel = async () => {
-    if (weekData) {
-      try {
-        previewStatusRef.current.isDeleted = true;
-        const response = await GeneratedScheduleApi.deleteSchedule(weekData.id);
-        console.log('A escala foi deletada com sucesso');
-      } catch (error) {
-        console.error('Erro ao deletar escala:', error);
-      }
-    }
+    setWeekData(null);
+    setShiftsData(null);
+    setPreviewSchedule(null);
     navigate('/staff');
   };
 
@@ -137,40 +48,58 @@ function GeneratedSchedule({ employees, setEmployees, isLoading, setIsLoading, w
     setEditMode(!editMode);
   };
 
-  const handleShiftsSchedule = () => {
-    const shiftsSchedule = { shifts: [] };
-    days_of_week.forEach((day) => {
-      if (scheduleData[day]) {
-        scheduleData[day].forEach((shift) => {
-          shiftsSchedule.shifts.push({
-            shift_id: shift.id,
-            employee_ids: shift.employees.map((employee) => employee.id),
-          });
-        });
-      }
-    });
-    console.log('shiftsSchedule', shiftsSchedule);
-    return shiftsSchedule;
+  const handleShiftsSchedule = (responseShifts) => {
+    return {
+      shifts: responseShifts.map((respShift, index) => {
+        const shift = shiftsData[index];
+        const day = days_of_week[shift.weekday];
+
+        const previewShift = scheduleData[day]?.find(
+          (s) =>
+            s.startTime === shift.start_time &&
+            s.endTime === shift.end_time &&
+            s.minEmployees === shift.min_staff,
+        );
+
+        return {
+          shift_id: respShift.id,
+          employee_ids: previewShift ? previewShift.employees.map((e) => e.id) : [],
+        };
+      }),
+    };
   };
 
   async function handleApproved() {
-    const shiftsSchedule = handleShiftsSchedule();
+    let newWeek = null;
+
     try {
-      const response = await GeneratedScheduleApi.approvedSchedule(weekData.id, shiftsSchedule);
-      console.log('Escala criada com sucesso:', response.data);
-      // Marca como persistido antes de navegar para não bloquear
-      markPreviewAsPersisted();
+      console.log('Criando semana:', weekData);
+      newWeek = await ShiftConfigApi.submitWeekData(weekData).then((r) => r.data);
+      console.log('Semana criada com sucesso:', newWeek);
+
+      const createdShifts = await Promise.all(
+        shiftsData.map((shift) =>
+          ShiftConfigApi.createShift(newWeek.id, shift).then((r) => r.data),
+        ),
+      );
+
+      const shiftsSchedule = handleShiftsSchedule(createdShifts);
+      console.log('Todos os turnos criados com sucesso!');
+
+      await GeneratedScheduleApi.approvedSchedule(newWeek.id, shiftsSchedule);
+
+      alert('Escala criada com sucesso!');
       navigate('/staff');
     } catch (error) {
-      console.error('Erro ao aprovar a escala:', error);
-      alert('Erro ao aprovar a escala. A semana será removida.');
-      try {
-        previewStatusRef.current.isDeleted = true;
-        await GeneratedScheduleApi.deleteSchedule(weekData.id);
-        console.log('Semana deletada devido ao erro na aprovação');
-      } catch (deleteError) {
-        console.error('Erro ao deletar semana:', deleteError);
+      console.error('Erro ao aprovar:', error);
+
+      if (newWeek) {
+        await GeneratedScheduleApi.deleteSchedule(newWeek.id).catch((e) =>
+          console.error('Erro ao deletar semana:', e),
+        );
       }
+
+      alert('Erro ao aprovar a escala.');
       navigate('/staff');
     }
   }
