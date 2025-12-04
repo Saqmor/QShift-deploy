@@ -57,21 +57,19 @@ class ScheduleGenerator:
     def __init__(
         self,
         *,
-        shift_ids: List[UUID],
         employee_ids: List[UUID],
         employee_names: List[str],
         shift_vector: List[shift_domain.Shift],
         availability_matrix: List[List[bool]],
     ):
 
-        self.shift_ids = shift_ids
         self.employee_ids = employee_ids
         self.employee_names = employee_names
         self.shift_vector = shift_vector
         self.availability_matrix = availability_matrix
 
         # Preprocessing
-        self.num_shifts = len(self.shift_ids)
+        self.num_shifts = len(self.shift_vector)
         self.num_employees = len(self.employee_ids)
 
         self.weekday = [s.weekday for s in self.shift_vector]  # 0..6
@@ -101,33 +99,19 @@ class ScheduleGenerator:
         *,
         db: Session,
         user_id: UUID,
-        week_id: UUID,
+        shift_vector: List[shift_domain.Shift],
     ):
         employee_ids, employee_names = cls._get_employees_for_user(
             db=db, user_id=user_id
         )
-        shift_ids = cls._get_shift_ids_for_week(db=db, week_id=week_id)
         return cls(
-            shift_ids=shift_ids,
             employee_ids=employee_ids,
             employee_names=employee_names,
-            shift_vector=cls._build_shift_vector(
-                db=db, user_id=user_id, shift_ids=shift_ids
-            ),
+            shift_vector=shift_vector,
             availability_matrix=cls._build_availability_matrix(
-                db=db, shift_ids=shift_ids, employee_ids=employee_ids
+                db=db, shift_vector=shift_vector, employee_ids=employee_ids
             ),
         )
-
-    @classmethod
-    def _get_shift_ids_for_week(cls, week_id: UUID, db: Session):
-        from app.models.shift import Shift
-
-        shifts = db.query(Shift.id).filter(Shift.week_id == week_id).all()
-        shift_ids = []
-        for shift in shifts:
-            shift_ids.append(shift.id)
-        return shift_ids
 
     @classmethod
     def _get_employees_for_user(
@@ -144,33 +128,19 @@ class ScheduleGenerator:
         return employee_ids, employee_names
 
     @classmethod
-    def _build_shift_vector(
-        cls, *, db: Session, user_id: UUID, shift_ids: List[UUID]
-    ) -> List[shift_domain.Shift]:
-        from app.models.shift import Shift
-
-        shift_vector = []
-        for shift_id in shift_ids:
-            shift_model = db.query(Shift).filter(Shift.id == shift_id).first()
-            shift_vector.append(shift_model.to_domain())
-        return shift_vector
-
-    @classmethod
     def _build_availability_matrix(
         cls,
         *,
         db: Session,
-        shift_ids: List[UUID],
+        shift_vector: List[shift_domain.Shift],
         employee_ids: List[UUID],
     ) -> List[List[bool]]:
-        from app.models.shift import Shift
         from app.models import Availability
 
         availability_matrix = [
-            [False] * len(shift_ids) for _ in range(len(employee_ids))
+            [False] * len(shift_vector) for _ in range(len(employee_ids))
         ]
-        for i in range(0, len(shift_ids)):
-            shift = db.query(Shift).filter(Shift.id == shift_ids[i]).first()
+        for i, shift in enumerate(shift_vector):
             for j in range(0, len(employee_ids)):
                 availabilities = (
                     db.query(Availability)
@@ -396,7 +366,7 @@ class ScheduleGenerator:
             chosen_after_2 = solver2
 
         # Building Schema (ScheduleOut)
-        schedule_shifts_out: List[schemas.ScheduleShiftOut] = []
+        schedule_shifts_out: List[schemas.PreviewScheduleShiftOut] = []
         for t in range(self.num_shifts):
             employees_out: List[schemas.ScheduleShiftEmployeeOut] = []
             for e in range(self.num_employees):
@@ -409,8 +379,7 @@ class ScheduleGenerator:
                     )
             s = self.shift_vector[t]
             schedule_shifts_out.append(
-                schemas.ScheduleShiftOut(
-                    shift_id=self.shift_ids[t],
+                schemas.PreviewScheduleShiftOut(
                     weekday=s.weekday,
                     start_time=s.start_time,
                     end_time=s.end_time,
@@ -419,4 +388,4 @@ class ScheduleGenerator:
                 )
             )
 
-        return schemas.ScheduleOut(shifts=schedule_shifts_out)
+        return schemas.PreviewScheduleOut(shifts=schedule_shifts_out)
