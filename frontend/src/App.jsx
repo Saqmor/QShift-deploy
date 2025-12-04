@@ -90,6 +90,7 @@ function App() {
               setWeekData={setWeekData}
               setShiftsData={setShiftsData}
               setPreviewSchedule={setPreviewSchedule}
+              setIsLoading={setIsLoading}
             />
           }
         />
@@ -102,8 +103,11 @@ function App() {
               isLoading={isLoading}
               setIsLoading={setIsLoading}
               weekData={weekData}
+              setWeekData={setWeekData}
               shiftsData={shiftsData}
+              setShiftsData={setShiftsData}
               previewSchedule={previewSchedule}
+              setPreviewSchedule={setPreviewSchedule}
             />
           }
         />
