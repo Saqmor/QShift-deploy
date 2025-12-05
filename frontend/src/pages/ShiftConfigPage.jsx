@@ -323,7 +323,7 @@ function ShiftConfigPage({
                           type="number"
                           min="0"
                           max="50"
-                          value={weekShift.config[dayIdx].min_staff}
+                          value={weekShift.config[dayIdx].min_staff ?? ''}
                           onChange={(e) =>
                             updateShiftConfig(weekShift.id, dayIdx, 'min_staff', e.target.value)
                           }
