@@ -1,21 +1,15 @@
-export const DataBaseUser = {
-  user_id: 1,
-  email: 'guicrfmoriya@gmail.com',
-  password: '124',
-};
-
 export const employeesMock = [
-  { id: 1, name: 'Guilherme Moriya', active: true },
-  { id: 2, name: 'Artur Dantas', active: true },
-  { id: 3, name: 'Gabriel Padilha', active: false },
-  { id: 4, name: 'Arthur Rocha', active: false },
-  { id: 5, name: 'Ângelo de Carvalho', active: true },
+  { id: 1, name: 'Guilherme', active: true },
+  { id: 2, name: 'Artur', active: true },
+  { id: 3, name: 'Gabriel', active: false },
+  { id: 4, name: 'Arthur', active: false },
+  { id: 5, name: 'Ângelo', active: true },
 ];
 
 export const employeesAvailability = {
   1: {
     id: 1,
-    name: 'Guilherme Moriya',
+    name: 'Guilherme',
     availability: [
       { weekday: 0, startTime: '08:00:00', endTime: '17:00:00' },
       { weekday: 1, startTime: '08:00:00', endTime: '20:00:00' },
@@ -27,7 +21,7 @@ export const employeesAvailability = {
   },
   2: {
     id: 2,
-    name: 'Artur Dantas',
+    name: 'Artur',
     availability: [
       { weekday: 0, startTime: '10:00:00', endTime: '21:00:00' },
       { weekday: 1, startTime: '10:00:00', endTime: '22:00:00' },
@@ -38,12 +32,12 @@ export const employeesAvailability = {
   },
   3: {
     id: 3,
-    name: 'Gabriel Padilha',
+    name: 'Gabriel',
     availability: [],
   },
   4: {
     id: 4,
-    name: 'Arthur Rocha',
+    name: 'Arthur',
     availability: [
       { weekday: 0, startTime: '14:00:00', endTime: '23:00:00' },
       { weekday: 1, startTime: '14:00:00', endTime: '23:00:00' },
@@ -55,7 +49,7 @@ export const employeesAvailability = {
   },
   5: {
     id: 5,
-    name: 'Ângelo de Carvalho',
+    name: 'Ângelo',
     availability: [
       { weekday: 0, startTime: '07:00:00', endTime: '22:00:00' },
       { weekday: 1, startTime: '07:00:00', endTime: '22:00:00' },
