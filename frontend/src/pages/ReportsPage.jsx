@@ -23,8 +23,6 @@ function ReportsPage({
       try {
         const weekResponse = await ReportsApi.getWeeks();
         setWeeksList(weekResponse.data);
-
-        console.log('Weeks received successfully:', weekResponse.data);
       } catch (error) {
         console.error('Error loading API data:', error);
       } finally {

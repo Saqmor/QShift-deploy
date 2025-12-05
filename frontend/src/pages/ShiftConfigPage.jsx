@@ -97,7 +97,7 @@ function ShiftConfigPage({
       })),
     }));
     localStorage.setItem('shiftConfigurations', JSON.stringify(configToSave));
-    console.log('Shift configurations saved:', configToSave);
+
   };
 
   const restoreConfigShift = () => {
@@ -112,7 +112,7 @@ function ShiftConfigPage({
         })),
       }));
       setWeekShifts(restoredShifts);
-      console.log('Shift configurations restored:', restoredShifts);
+
     } else {
       console.log('No saved configuration found.');
     }
@@ -235,7 +235,7 @@ function ShiftConfigPage({
         if (preciewScheduleData.possible && preciewScheduleData.schedule) {
           const convertedData = convertScheduleData(preciewScheduleData.schedule.shifts);
           setPreviewSchedule(convertedData);
-          console.log('The created schedule:', preciewScheduleData.schedule);
+
         } else {
           alert(
             'Unable to generate a viable schedule with the current settings. Check shift and employee settings.',
@@ -277,9 +277,8 @@ function ShiftConfigPage({
               {daysOfWeek.map((day, idx) => (
                 <th
                   key={idx}
-                  className={`px-4 py-3 text-center text-sm font-bold ${
-                    selectedDaysMap[idx] ? 'text-slate-200' : 'text-slate-500'
-                  }`}
+                  className={`px-4 py-3 text-center text-sm font-bold ${selectedDaysMap[idx] ? 'text-slate-200' : 'text-slate-500'
+                    }`}
                 >
                   {day}
                 </th>
@@ -338,11 +337,10 @@ function ShiftConfigPage({
                   <button
                     onClick={() => removeShift(weekShift.id)}
                     disabled={weekShifts.length === 1}
-                    className={`p-2 rounded-lg transition-colors ${
-                      weekShifts.length === 1
-                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                        : 'bg-red-600 hover:bg-red-700 text-white'
-                    }`}
+                    className={`p-2 rounded-lg transition-colors ${weekShifts.length === 1
+                      ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                      : 'bg-red-600 hover:bg-red-700 text-white'
+                      }`}
                     title="Delete shift"
                   >
                     <Trash2 className="w-4 h-4" />

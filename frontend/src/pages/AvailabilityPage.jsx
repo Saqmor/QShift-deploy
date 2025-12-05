@@ -66,7 +66,6 @@ function AvailabilityPage({ selectEditEmployee, setSelectEditEmployee, isLoading
         navigate('/staff');
       } finally {
         setIsLoading(false);
-        console.log('page loaded', isLoading);
       }
     }
     fetchEmployee();
@@ -163,7 +162,6 @@ function AvailabilityPage({ selectEditEmployee, setSelectEditEmployee, isLoading
           active: isActive,
         });
         employeeId = newEmployee.id;
-        console.log('Employee created:', newEmployee);
       } else {
         console.log('Updating existing employee...');
         await StaffApi.updateEmployeeData(employeeId, {

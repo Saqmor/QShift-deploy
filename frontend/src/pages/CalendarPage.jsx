@@ -30,10 +30,8 @@ function CalendarPage({
         setGeneratedWeeks(weekResponse.data);
         setSelectedDays([]);
         setSelectedWeek(null);
-
-        console.log('Weeks received successfully:', weekResponse.data);
       } catch (error) {
-        console.error('Error loading API data:', error);
+        console.error('Error loading received weeks data:', error);
       } finally {
         setIsLoading(false);
       }

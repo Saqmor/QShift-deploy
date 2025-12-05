@@ -128,7 +128,6 @@ function EmployeeReportsPage({
           setEmployeeYearStats(employeeStatsFormatted);
           const statsCards = createStatsCards(employeeStatsFormatted);
           setStatsCards(statsCards);
-          console.log('Employee statistics received successfully:', response.data);
         }
       } catch (error) {
         console.error('Error fetching employee statistics:', error);
@@ -142,7 +141,6 @@ function EmployeeReportsPage({
   }, [currentEmployee, currentMonth, currentYear]);
 
   const handleToggleEmployee = (employee, month, year) => {
-    console.log('Selecting employee report:', employee, month, year);
     setCurrentEmployee(employee);
   };
 

@@ -65,9 +65,7 @@ function GeneratedSchedule({
     let newWeek = null;
 
     try {
-      console.log('Creating week:', weekData);
       newWeek = await ShiftConfigApi.submitWeekData(weekData).then((r) => r.data);
-      console.log('Week created successfully:', newWeek);
 
       const createdShifts = await Promise.all(
         shiftsData.map((shift) =>
