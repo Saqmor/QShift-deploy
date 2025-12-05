@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import { daysOfWeek } from '../constants/constantsOfTable.js';
 
 /**
  * Retorna o nome do mês em português
@@ -57,24 +58,14 @@ function areEqualSlots(slots1, slots2) {
 }
 
 export async function exportToExcel(scheduleData, week, employeeList) {
-  const days_of_week = [
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-    'sunday',
-  ];
-
   const dayHeaders = {
-    monday: 'seg.',
-    tuesday: 'ter.',
-    wednesday: 'qua.',
-    thursday: 'qui.',
-    friday: 'sex.',
-    saturday: 'sáb.',
-    sunday: 'dom.',
+    Monday: 'seg.',
+    Tuesday: 'ter.',
+    Wednesday: 'qua.',
+    Thursday: 'qui.',
+    Friday: 'sex.',
+    Saturday: 'sáb.',
+    Sunday: 'dom.',
   };
 
   if (!week || !week.start_date) return;
@@ -85,7 +76,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
   // Calcular quais dias mostram coluna de horários (visibleSlots)
   const visibleSlots = {};
   let previousSlots = [];
-  days_of_week.forEach((day) => {
+  daysOfWeek.forEach((day) => {
     const currentSlots = scheduleData[day];
     visibleSlots[day] = !areEqualSlots(currentSlots, previousSlots);
     previousSlots = currentSlots;
@@ -97,7 +88,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
 
   // Calcular largura dinâmica das colunas
   const columns = [];
-  days_of_week.forEach((day) => {
+  daysOfWeek.forEach((day) => {
     if (visibleSlots[day]) {
       columns.push({ width: 15 }); // Coluna de horários
     }
@@ -106,7 +97,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
   worksheet.columns = columns;
 
   // Calcular número total de colunas
-  const totalColumns = days_of_week.reduce((acc, day) => acc + (visibleSlots[day] ? 2 : 1), 0);
+  const totalColumns = daysOfWeek.reduce((acc, day) => acc + (visibleSlots[day] ? 2 : 1), 0);
   const lastColumnLetter = String.fromCharCode(64 + totalColumns); // A=65, então 64+1=A
 
   // Linha 1: Mês (mesclada em todas as colunas)
@@ -133,7 +124,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
 
   // Linha 2: Cabeçalho dos dias
   const dayRowValues = [];
-  days_of_week.forEach((day) => {
+  daysOfWeek.forEach((day) => {
     if (visibleSlots[day]) {
       dayRowValues.push(''); // Coluna de horários vazia
     }
@@ -143,7 +134,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
   const dayRow = worksheet.getRow(2);
   dayRow.values = dayRowValues;
   let colIndex = 1;
-  days_of_week.forEach((day) => {
+  daysOfWeek.forEach((day) => {
     if (visibleSlots[day]) {
       const timeSlotCell = dayRow.getCell(colIndex);
       timeSlotCell.alignment = { vertical: 'middle', horizontal: 'center' };
@@ -175,7 +166,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
   // Linha 3: Datas
   const dateRowValues = [];
   for (let i = 0; i < 7; i++) {
-    const day = days_of_week[i];
+    const day = daysOfWeek[i];
     const currentDate = new Date(startDate);
     currentDate.setDate(startDate.getDate() + i);
 
@@ -188,7 +179,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
   const dateRow = worksheet.getRow(3);
   dateRow.values = dateRowValues;
   colIndex = 1;
-  days_of_week.forEach((day) => {
+  daysOfWeek.forEach((day) => {
     if (visibleSlots[day]) {
       const timeSlotCell = dateRow.getCell(colIndex);
       timeSlotCell.alignment = { vertical: 'middle', horizontal: 'center' };
@@ -218,7 +209,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
   });
 
   // Encontrar número máximo de slots
-  const maxSlots = Math.max(...days_of_week.map((day) => scheduleData[day].length), 1);
+  const maxSlots = Math.max(...daysOfWeek.map((day) => scheduleData[day].length), 1);
 
   // Linhas de turnos
   let currentRow = 4;
@@ -228,7 +219,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
   for (let slotIndex = 0; slotIndex < maxSlots; slotIndex++) {
     const rowValues = [];
 
-    days_of_week.forEach((day) => {
+    daysOfWeek.forEach((day) => {
       const daySlots = scheduleData[day] || [];
       const slot = daySlots[slotIndex];
 
@@ -263,7 +254,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
     row.values = rowValues;
 
     colIndex = 1;
-    days_of_week.forEach((day) => {
+    daysOfWeek.forEach((day) => {
       const daySlots = scheduleData[day] || [];
       const slot = daySlots[slotIndex];
 
@@ -347,7 +338,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
 
   // Linha de folgas
   const folgasRowValues = [];
-  days_of_week.forEach((day) => {
+  daysOfWeek.forEach((day) => {
     if (visibleSlots[day]) {
       folgasRowValues.push(day === 'monday' ? 'FOLGAS' : '');
     }
@@ -366,7 +357,7 @@ export async function exportToExcel(scheduleData, week, employeeList) {
   folgasRow.values = folgasRowValues;
 
   colIndex = 1;
-  days_of_week.forEach((day) => {
+  daysOfWeek.forEach((day) => {
     if (visibleSlots[day]) {
       const timeCell = folgasRow.getCell(colIndex);
       timeCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
