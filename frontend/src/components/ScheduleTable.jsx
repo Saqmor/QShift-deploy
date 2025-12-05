@@ -111,7 +111,7 @@ function ScheduleTable({ scheduleData, setScheduleData, employeeList, week, edit
       const dayData = [...newData[day]];
 
       newData[day] = dayData.map((slt) => {
-        if (slt.localId === slot.localId) {
+        if (slt.id === slot.id) {
           const isSelected = slt.employees.some((emp) => emp.id === employee.id);
           const updatedEmployees = isSelected
             ? slt.employees.filter((emp) => emp.id !== employee.id)
@@ -290,7 +290,7 @@ function ScheduleTable({ scheduleData, setScheduleData, employeeList, week, edit
           day={selectedSlot.day}
           slot={selectedSlot.slot}
           assignedEmployees={
-            scheduleData[selectedSlot.day].find((slt) => slt.localId === selectedSlot.slot.localId)
+            scheduleData[selectedSlot.day].find((slt) => slt.id === selectedSlot.slot.id)
               ?.employees || []
           }
           employeeList={employeeList}
