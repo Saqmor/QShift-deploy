@@ -14,7 +14,7 @@ function LoginPage({ isLoading, setIsLoading }) {
     try {
       const response = await LoginApi.authenticateUser(email, password);
       localStorage.setItem('token', response.data.access_token);
-      console.log('User logged in:', email);
+
       navigate('/staff');
     } catch (err) {
       console.error(err);

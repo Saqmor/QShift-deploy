@@ -6,12 +6,12 @@ from typing import List
 from pydantic import BaseModel, Field
 import app.core.constants as constants
 from typing import Optional
+from app.schemas.shift import ShiftBase
 
 class ScheduleOut(BaseModel):
     shifts: List[ScheduleShiftOut]
 
-class ScheduleShiftOut(BaseModel):
-    shift_id: uuid.UUID
+class ScheduleShiftOutBase(BaseModel):
     weekday: int = Field(..., ge=0, le=6, description="0 = monday ... 6 = sunday")
     start_time: time = Field(..., description="Local shift start time")
     end_time: time = Field(..., description="Local shift end time")
@@ -19,6 +19,11 @@ class ScheduleShiftOut(BaseModel):
         1, ge=1, description="Minimum amount of employees required for the shift"
     )
     employees: List[ScheduleShiftEmployeeOut]
+
+class ScheduleShiftOut(ScheduleShiftOutBase):
+    shift_id: uuid.UUID
+
+    model_config = {"from_attributes": True}
 
 class ScheduleShiftEmployeeOut(BaseModel):
     employee_id: uuid.UUID
@@ -37,4 +42,13 @@ class ScheduleShiftCreate(BaseModel):
 
 class SchedulePreviewOut(BaseModel):
     possible: bool
-    schedule: Optional[ScheduleOut] = None
+    schedule: Optional[PreviewScheduleOut] = None
+
+class PreviewScheduleOut(BaseModel):
+    shifts: List[PreviewScheduleShiftOut]
+
+class PreviewScheduleShiftOut(ScheduleShiftOutBase):
+    pass
+
+class ShiftVectorIn(BaseModel):
+    shift_vector: List[ShiftBase]

@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Plus, ArrowRight, Trash2 } from 'lucide-react';
+import { Users, Plus, ArrowRight, Trash2, AlertTriangle, X } from 'lucide-react';
 import BaseLayout from '../layouts/BaseLayout.jsx';
 import Header from '../components/Header.jsx';
 import { StaffApi } from '../services/api.js';
@@ -14,6 +14,7 @@ function StaffPage({
   setEmployees,
 }) {
   const navigate = useNavigate();
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
   useEffect(() => {
     async function employeeData() {
@@ -21,10 +22,8 @@ function StaffPage({
       try {
         const staffResponse = await StaffApi.getAll();
         setEmployees(staffResponse.data);
-
-        console.log('Fetched Employees:', staffResponse.data);
       } catch (error) {
-        console.error('Erro ao carregar dados da API:', error);
+        console.error('Error loading employee data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -36,14 +35,23 @@ function StaffPage({
     try {
       await StaffApi.deleteEmployee(employeeId);
       setEmployees((prevEmployees) => prevEmployees.filter((emp) => emp.id !== employeeId));
-      console.log('Funcionário removido com sucesso');
+      setDeleteConfirmation(null);
+      console.log('Employee removed successfully');
     } catch (error) {
-      console.error('Erro ao deletar funcionário:', error);
+      console.error('Error deleting employee:', error);
+      setDeleteConfirmation(null);
     }
   };
 
+  const openDeleteConfirmation = (employee) => {
+    setDeleteConfirmation(employee);
+  };
+
+  const closeDeleteConfirmation = () => {
+    setDeleteConfirmation(null);
+  };
+
   const handleAddEmployee = () => {
-    console.log('Add employee');
     setSelectEditEmployee(null);
     navigate('/availability');
   };
@@ -52,11 +60,10 @@ function StaffPage({
     setIsLoading(true);
     const emp = employees.find((e) => e.id === employeeId);
     if (emp) {
-      console.log('entrou', emp);
       setSelectEditEmployee(emp);
       navigate('/availability');
     } else {
-      console.warn('Funcionário não encontrado:', employeeId);
+      console.warn('Employee not found:', employeeId);
     }
   };
 
@@ -68,7 +75,6 @@ function StaffPage({
       setEmployees(
         employees.map((emp) => (emp.id === employeeId ? { ...emp, active: !emp.active } : emp)),
       );
-      console.log('Toggle status:', employeeId, employeeData.active);
     }
   };
 
@@ -134,7 +140,7 @@ function StaffPage({
 
               <div className="flex items-stretch border-l border-slate-700">
                 <button
-                  onClick={() => handleDeleteEmployee(employee.id)}
+                  onClick={() => openDeleteConfirmation(employee)}
                   className="px-4 bg-slate-800 hover:bg-red-600 text-slate-400 hover:text-white transition-all duration-200 group flex items-center justify-center"
                   title="Delete employee"
                 >
@@ -171,6 +177,57 @@ function StaffPage({
           </div>
         )}
       </div>
+
+      {deleteConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 max-w-md w-full shadow-xl">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-700">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-600/20 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-white">Confirm Delete</h3>
+              </div>
+              <button
+                onClick={closeDeleteConfirmation}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <p className="text-slate-300 mb-2">
+                Deleting this employee will also remove all associated history. Are you sure you
+                want to proceed?
+              </p>
+              <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
+                <p className="text-white font-medium">{deleteConfirmation.name}</p>
+                <p className="text-sm text-slate-400 mt-1">This action cannot be undone.</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-700">
+              <button
+                onClick={closeDeleteConfirmation}
+                className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteEmployee(deleteConfirmation.id)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </BaseLayout>
   );
 }

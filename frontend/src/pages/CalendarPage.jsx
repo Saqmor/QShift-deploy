@@ -5,6 +5,7 @@ import BaseLayout from '../layouts/BaseLayout';
 import CalendarTable from '../components/CalendarTable';
 import Header from '../components/Header';
 import { CalendarApi } from '../services/api.js';
+import { months } from '../constants/constantsOfTable.js';
 
 function CalendarPage({
   currentMonth,
@@ -29,10 +30,8 @@ function CalendarPage({
         setGeneratedWeeks(weekResponse.data);
         setSelectedDays([]);
         setSelectedWeek(null);
-
-        console.log('Semanas recebidas com sucesso:', weekResponse.data);
       } catch (error) {
-        console.error('Erro ao carregar dados da API:', error);
+        console.error('Error loading received weeks data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -83,10 +82,6 @@ function CalendarPage({
 
   const handleAdvance = () => {
     if (selectedWeek && selectedDays.length > 0) {
-      console.log('Avançando com:', {
-        selectedWeek,
-        selectedDays,
-      });
       navigate('/shift-config');
     }
   };
@@ -94,21 +89,6 @@ function CalendarPage({
   const handleBack = () => {
     navigate('/staff');
   };
-
-  const months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
 
   if (isLoading) {
     return (

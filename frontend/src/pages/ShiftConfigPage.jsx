@@ -3,11 +3,18 @@ import Header from '../components/Header';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Save, RotateCcw, Calendar, Trash2, ArrowLeft } from 'lucide-react';
-import { ShiftConfigApi } from '../services/api.js';
+import { GeneratedScheduleApi } from '../services/api.js';
+import { daysOfWeek } from '../constants/constantsOfTable.js';
 
-function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
+function ShiftConfigPage({
+  selectedDays,
+  startDate,
+  setWeekData,
+  setShiftsData,
+  setPreviewSchedule,
+  setIsLoading,
+}) {
   const navigate = useNavigate();
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const openDaysMask = [];
   const selectedDaysMap = {};
   selectedDays.forEach((day) => {
@@ -32,7 +39,6 @@ function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
   ]);
 
   const handleBack = () => {
-    console.log('Voltando para página de calendário');
     navigate('/calendar');
   };
 
@@ -50,7 +56,6 @@ function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
       ],
     };
     setWeekShifts([...weekShifts, newWeekShift]);
-    console.log('Adicionando novo turno:', newWeekShift);
   };
 
   const removeShift = (weekShiftId) => {
@@ -92,7 +97,7 @@ function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
       })),
     }));
     localStorage.setItem('shiftConfigurations', JSON.stringify(configToSave));
-    console.log('Configurações de turno salvas:', configToSave);
+
   };
 
   const restoreConfigShift = () => {
@@ -107,9 +112,9 @@ function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
         })),
       }));
       setWeekShifts(restoredShifts);
-      console.log('Configurações de turno restauradas:', restoredShifts);
+
     } else {
-      console.log('Nenhuma configuração salva encontrada.');
+      console.log('No saved configuration found.');
     }
   };
 
@@ -125,21 +130,19 @@ function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
           const hasAllFields = shift.start_time && shift.end_time && shift.min_staff;
           if (hasAnyField && !hasAllFields) {
             let missingFields = [];
-            if (!shift.start_time) missingFields.push('hora de início');
-            if (!shift.end_time) missingFields.push('hora final');
-            if (!shift.min_staff) missingFields.push('número de funcionários');
-            errors.push(`${labelShift}: Falta ${missingFields.join(', ')}`);
+            if (!shift.start_time) missingFields.push('start time');
+            if (!shift.end_time) missingFields.push('end time');
+            if (!shift.min_staff) missingFields.push('number of employees');
+            errors.push(`${labelShift}: Missing ${missingFields.join(', ')}`);
             return;
           }
 
           if (shift.start_time && shift.end_time && shift.start_time >= shift.end_time) {
-            errors.push(
-              `${labelShift}: O horário de término deve ser posterior ao horário de início.`,
-            );
+            errors.push(`${labelShift}: End time must be after start time.`);
             return;
           }
           if (shift.min_staff && Number(shift.min_staff) < 0) {
-            errors.push(`${labelShift}: O número mínimo de funcionários deve ser superior a 0.`);
+            errors.push(`${labelShift}: Minimum number of employees must be greater than 0.`);
             return;
           }
 
@@ -162,19 +165,57 @@ function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
       return {
         sucess: false,
         errors: [
-          'Por favor, configure pelo menos um turno completo (com horário de início, horário de término e número de funcionários).',
+          'Please configure at least one complete shift (with start time, end time, and number of employees).',
         ],
       };
     }
-
+    setShiftsData(shiftsSchedule);
     return { sucess: true, data: shiftsSchedule };
+  };
+
+  const convertScheduleData = (shifts) => {
+    let scheduleModified = {
+      Monday: [],
+      Tuesday: [],
+      Wednesday: [],
+      Thursday: [],
+      Friday: [],
+      Saturday: [],
+      Sunday: [],
+    };
+    shifts.forEach((shift, index) => {
+      const dayName = daysOfWeek[shift.weekday];
+      scheduleModified[dayName].push({
+        id: `${dayName}-${index}`,
+        startTime: shift.start_time.slice(0, 5),
+        endTime: shift.end_time.slice(0, 5),
+        minEmployees: shift.min_staff,
+        employees: shift.employees.map((emp) => ({
+          id: emp.employee_id,
+          name: emp.name,
+        })),
+      });
+    });
+    daysOfWeek.forEach((day) => {
+      scheduleModified[day].sort((a, b) => {
+        if (a.startTime < b.startTime) return -1;
+        if (a.startTime > b.startTime) return 1;
+        if (a.endTime < b.endTime) return -1;
+        if (a.endTime > b.endTime) return 1;
+
+        return 0;
+      });
+    });
+    return scheduleModified;
   };
 
   const createSchedule = async () => {
     const result = handleShiftsSchedule();
+    setIsLoading(true);
     if (!result.sucess) {
       const errorMessage = result.errors.join('\n\n');
-      alert(`Por favor, corrija os seguintes problemas:\n\n${errorMessage}`);
+      setIsLoading(false);
+      alert(`Please fix the following issues:\n\n${errorMessage}`);
       return;
     }
 
@@ -185,46 +226,39 @@ function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
           start_date: startDate.toISOString().split('T')[0],
           open_days: openDaysMask,
         };
-        console.log('Criando semana:', week);
-        const responseWeek = await ShiftConfigApi.submitWeekData(week);
-        console.log('Semana criada com sucesso:', responseWeek.data);
-        const weekData = responseWeek.data;
-        setWeekData(weekData);
+        setWeekData(week);
+        const responsePreviewSchedule = await GeneratedScheduleApi.generateSchedulePreview({
+          shift_vector: shiftsSchedule,
+        });
+        const preciewScheduleData = responsePreviewSchedule.data;
 
-        console.log('Turnos a serem criados:', shiftsSchedule);
-        if (shiftsSchedule.length === 0) {
+        if (preciewScheduleData.possible && preciewScheduleData.schedule) {
+          const convertedData = convertScheduleData(preciewScheduleData.schedule.shifts);
+          setPreviewSchedule(convertedData);
+
+        } else {
           alert(
-            'Nenhum turno válido configurado. Preencha os horários e quantidade de funcionários.',
+            'Unable to generate a viable schedule with the current settings. Check shift and employee settings.',
           );
-          return;
+          navigate('/staff');
         }
 
-        for (const shift of shiftsSchedule) {
-          try {
-            console.log('Criando turno:', shift);
-            const response = await ShiftConfigApi.createShift(weekData.id, shift);
-            console.log('Turno criado:', response.data);
-          } catch (error) {
-            console.error('Erro ao criar turno específico:', shift, error);
-            throw error;
-          }
-        }
-        console.log('Todos os turnos criados com sucesso!');
-        alert('Escala criada com sucesso!');
         navigate('/schedule');
       } catch (error) {
-        console.error('Erro ao criar escala:', error);
+        console.error('Error creating schedule:', error);
 
         if (error.response) {
-          console.error('Resposta do servidor:', error.response.data);
-          alert(`Erro: ${error.response.data.detail || 'Erro ao criar escala'}`);
+          console.error('Server response:', error.response.data);
+          alert(`Error: ${error.response.data.detail || 'Error creating schedule'}`);
         } else if (error.request) {
-          console.error('Sem resposta do servidor:', error.request);
-          alert('Erro: Servidor não respondeu. Verifique se o backend está rodando.');
+          console.error('No response from server:', error.request);
+          alert('Error: Server did not respond. Check if the backend is running.');
         } else {
-          console.error('Erro na configuração:', error.message);
-          alert(`Erro: ${error.message}`);
+          console.error('Configuration error:', error.message);
+          alert(`Error: ${error.message}`);
         }
+
+        setIsLoading(false);
       }
     }
   };
@@ -243,9 +277,8 @@ function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
               {daysOfWeek.map((day, idx) => (
                 <th
                   key={idx}
-                  className={`px-4 py-3 text-center text-sm font-bold ${
-                    selectedDaysMap[idx] ? 'text-slate-200' : 'text-slate-500'
-                  }`}
+                  className={`px-4 py-3 text-center text-sm font-bold ${selectedDaysMap[idx] ? 'text-slate-200' : 'text-slate-500'
+                    }`}
                 >
                   {day}
                 </th>
@@ -287,7 +320,7 @@ function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
                           type="number"
                           min="0"
                           max="50"
-                          value={weekShift.config[dayIdx].min_staff}
+                          value={weekShift.config[dayIdx].min_staff ?? ''}
                           onChange={(e) =>
                             updateShiftConfig(weekShift.id, dayIdx, 'min_staff', e.target.value)
                           }
@@ -304,11 +337,10 @@ function ShiftConfigPage({ selectedDays, startDate, setWeekData }) {
                   <button
                     onClick={() => removeShift(weekShift.id)}
                     disabled={weekShifts.length === 1}
-                    className={`p-2 rounded-lg transition-colors ${
-                      weekShifts.length === 1
-                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                        : 'bg-red-600 hover:bg-red-700 text-white'
-                    }`}
+                    className={`p-2 rounded-lg transition-colors ${weekShifts.length === 1
+                      ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                      : 'bg-red-600 hover:bg-red-700 text-white'
+                      }`}
                     title="Delete shift"
                   >
                     <Trash2 className="w-4 h-4" />

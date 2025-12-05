@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GeneratedScheduleApi } from '../services/api.js';
 import { exportToExcel } from '../utils/exportSchedule.js';
+import { months, daysOfWeek } from '../constants/constantsOfTable.js';
 
 function ScheduleRecordsPage({
   employees,
@@ -28,29 +29,19 @@ function ScheduleRecordsPage({
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [scheduleData, setScheduleData] = useState(null);
-  const days_of_week = [
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-    'sunday',
-  ];
   const [schedulesCache, setSchedulesCache] = useState({});
-  console.log('week', weekRecords);
   const convertScheduleData = (shifts) => {
-    const scheduleModified = {
-      monday: [],
-      tuesday: [],
-      wednesday: [],
-      thursday: [],
-      friday: [],
-      saturday: [],
-      sunday: [],
+    let scheduleModified = {
+      Monday: [],
+      Tuesday: [],
+      Wednesday: [],
+      Thursday: [],
+      Friday: [],
+      Saturday: [],
+      Sunday: [],
     };
     shifts.forEach((shift) => {
-      const dayName = days_of_week[shift.weekday];
+      const dayName = daysOfWeek[shift.weekday];
       scheduleModified[dayName].push({
         id: shift.shift_id,
         startTime: shift.start_time.slice(0, 5),
@@ -62,7 +53,16 @@ function ScheduleRecordsPage({
         })),
       });
     });
-    console.log('setou scheduleData', scheduleData);
+    daysOfWeek.forEach((day) => {
+      scheduleModified[day].sort((a, b) => {
+        if (a.startTime < b.startTime) return -1;
+        if (a.startTime > b.startTime) return 1;
+        if (a.endTime < b.endTime) return -1;
+        if (a.endTime > b.endTime) return 1;
+
+        return 0;
+      });
+    });
     return scheduleModified;
   };
 
@@ -71,20 +71,6 @@ function ScheduleRecordsPage({
     const [yearStartDate, monthStartDate, dayStartDate] = week.start_date.split('-').map(Number);
     const startDate = new Date(yearStartDate, monthStartDate - 1, dayStartDate);
     const endDate = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
     const startMonth = months[startDate.getMonth()];
     const endMonth = months[endDate.getMonth()];
 
@@ -95,7 +81,6 @@ function ScheduleRecordsPage({
   };
 
   useEffect(() => {
-    console.log('entrou useEffect');
     async function generateSchedule() {
       if (!weekRecords?.id) {
         setIsLoading(false);
@@ -107,26 +92,23 @@ function ScheduleRecordsPage({
       }
       try {
         const response = await GeneratedScheduleApi.getGeneratedSchedule(weekRecords.id);
-        console.log('GeneratedScheduleApi', response.data);
         if (response.data) {
           const convertedData = convertScheduleData(response.data.shifts);
           setScheduleData(convertedData);
-          console.log('Turnos:', response.data.shifts);
           setSchedulesCache((prev) => ({
             ...prev,
             [weekRecords.id]: convertedData,
           }));
         }
       } catch (error) {
-        console.error('Erro ao receber a escala:', error);
-        alert('Nenhuma escala foi gerada ainda.');
+        console.error('Error receiving schedule:', error);
+        alert('No schedule has been generated yet.');
       } finally {
         setIsLoading(false);
       }
     }
     generateSchedule();
   }, [weekRecords?.id]);
-  console.log('saiu useEffect');
   const previousWeek = () => {
     if (weeksList.length - 1 > currentIdxWeek) {
       setWeekRecords(weeksList[currentIdxWeek + 1]);
@@ -149,7 +131,7 @@ function ScheduleRecordsPage({
 
   const handleShiftsSchedule = () => {
     const shiftsSchedule = { shifts: [] };
-    days_of_week.forEach((day) => {
+    daysOfWeek.forEach((day) => {
       if (scheduleData[day]) {
         scheduleData[day].forEach((shift) => {
           shiftsSchedule.shifts.push({
@@ -159,7 +141,6 @@ function ScheduleRecordsPage({
         });
       }
     });
-    console.log('shiftsSchedule', shiftsSchedule);
     return shiftsSchedule;
   };
 
@@ -175,7 +156,7 @@ function ScheduleRecordsPage({
       await GeneratedScheduleApi.approvedSchedule(weekRecords.id, shiftsSchedule);
       setEditMode(false);
     } catch (error) {
-      console.error('Erro ao salvar a escala:', error);
+      console.error('Error saving schedule:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -226,7 +207,7 @@ function ScheduleRecordsPage({
         }
       }
     } catch (error) {
-      console.log('Erro ao deletar a escala:', error);
+      console.log('Error deleting schedule:', error);
       throw error;
     } finally {
       setEditMode(false);

@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import APIRouter, status, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Tuple
+from typing import List
 
 import app.schemas.schedule as schemas
 import app.services.schedule as schedule_service
@@ -10,13 +10,13 @@ from app.models.shift import Shift
 from app.api.dependencies import current_user_id
 from app.core.db import get_session
 from app.services.schedule import ScheduleGenerator
+import app.domain.shift as shift_domain
 
-router = APIRouter(prefix="/weeks/{week_id}/schedule", tags=["schedule"])
-
+router = APIRouter(prefix="", tags=["schedule"])
 
 # CREATE
 @router.post(
-    "", response_model=schemas.ScheduleOut, status_code=status.HTTP_201_CREATED
+    "/weeks/{week_id}/schedule", response_model=schemas.ScheduleOut, status_code=status.HTTP_201_CREATED
 )
 def create_schedule(
     week_id: UUID,
@@ -47,7 +47,7 @@ def create_schedule(
 
 
 # READ
-@router.get("", response_model=schemas.ScheduleOut, status_code=status.HTTP_200_OK)
+@router.get("/weeks/{week_id}/schedule", response_model=schemas.ScheduleOut, status_code=status.HTTP_200_OK)
 def read_schedule(
     week_id: UUID,
     user_id: UUID = Depends(current_user_id),
@@ -57,7 +57,7 @@ def read_schedule(
 
 
 # DELETE
-@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/weeks/{week_id}/schedule", status_code=status.HTTP_204_NO_CONTENT)
 def delete_schedule(
     week_id: UUID,
     user_id: UUID = Depends(current_user_id),
@@ -83,18 +83,24 @@ def delete_schedule(
 
 
 # GENERATE PREVIEW SCHEDULE
-@router.get(
-    "/preview",
+@router.post(
+    "/preview-schedule",
     response_model=schemas.SchedulePreviewOut,
     status_code=status.HTTP_200_OK,
 )
 def generate_preview_schedule(
-    week_id: UUID,
+    payload: schemas.ShiftVectorIn,
     user_id: UUID = Depends(current_user_id),
     db: Session = Depends(get_session),
 ):
+
+    shift_vector = [
+        shift_domain.Shift(**s.model_dump())
+        for s in payload.shift_vector
+    ]
+
     schedule_generator = ScheduleGenerator.from_db(
-        db=db, user_id=user_id, week_id=week_id
+        db=db, user_id=user_id, shift_vector=shift_vector
     )
     possible = schedule_generator.check_possibility()
 
