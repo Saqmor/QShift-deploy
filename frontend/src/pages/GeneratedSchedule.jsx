@@ -1,7 +1,7 @@
 import BaseLayout from '../layouts/BaseLayout';
 import Header from '../components/Header';
 import ScheduleTable from '../components/ScheduleTable';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GeneratedScheduleApi } from '../services/api.js';
 import { ShiftConfigApi } from '../services/api.js';

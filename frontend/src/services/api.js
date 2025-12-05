@@ -32,19 +32,6 @@ api.interceptors.response.use(
   },
 );
 
-async function fetchApi(path, options = {}) {
-  const token = localStorage.getItem('token');
-
-  return fetch(`${import.meta.env.VITE_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
-}
-
 export const ShiftConfigApi = {
   createShift: async (week_id, shiftData) => {
     try {
@@ -185,10 +172,7 @@ export const AvailabilityApi = {
 export const GeneratedScheduleApi = {
   deleteSchedule: async (week_id) => {
     try {
-      await fetchApi(`/weeks/${week_id}`, {
-        method: 'DELETE',
-        keepalive: true,
-      });
+      return await api.delete(`/weeks/${week_id}`);
     } catch (error) {
       console.error('Error deleting schedule week:', error);
       throw error;

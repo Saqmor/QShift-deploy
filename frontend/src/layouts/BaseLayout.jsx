@@ -27,10 +27,8 @@ function BaseLayout({
         </div>
       )}
 
-      {/* Sidebar Overlay for Mobile */}
       {showSidebar && (
         <>
-          {/* Backdrop */}
           {isSidebarOpen && (
             <div
               className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -38,7 +36,6 @@ function BaseLayout({
             />
           )}
 
-          {/* Sidebar Container */}
           <div
             className={`
             fixed inset-y-0 left-0 z-50 w-48 transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0
