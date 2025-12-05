@@ -33,6 +33,7 @@ function EmployeeSelector({
               const isSelected = assignedEmployees.some((assignedEmp) => assignedEmp.id === emp.id);
               return (
                 <button
+                  key={emp.id}
                   onClick={() => onToggleEmployee(emp, slot, day)}
                   className={`w-full px-4 py-3 rounded-lg text-left transition-all ${
                     isSelected
