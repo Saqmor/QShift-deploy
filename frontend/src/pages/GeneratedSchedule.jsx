@@ -32,10 +32,20 @@ function GeneratedSchedule({
   ];
 
   useEffect(() => {
+    if (!previewSchedule) return;
+    const scheduleWithIds = {};
+    days_of_week.forEach((day) => {
+      const slots = previewSchedule[day];
+      scheduleWithIds[day] = slots.map((slot, index) => ({
+        ...slot,
+        id: `${day}-${index}`,
+      }));
+    });
+    setScheduleData(scheduleWithIds);
     if (isLoading) {
       setIsLoading(false);
     }
-  }, []);
+  }, [previewSchedule]);
 
   const handleCancel = async () => {
     setWeekData(null);
@@ -51,14 +61,13 @@ function GeneratedSchedule({
   const handleShiftsSchedule = (responseShifts) => {
     return {
       shifts: responseShifts.map((respShift, index) => {
-        const shift = shiftsData[index];
-        const day = days_of_week[shift.weekday];
+        const day = days_of_week[respShift.weekday];
 
         const previewShift = scheduleData[day]?.find(
           (s) =>
-            s.startTime === shift.start_time &&
-            s.endTime === shift.end_time &&
-            s.minEmployees === shift.min_staff,
+            s.startTime === respShift.start_time.slice(0, 5) &&
+            s.endTime === respShift.end_time.slice(0, 5) &&
+            s.minEmployees === respShift.min_staff,
         );
 
         return {
@@ -100,6 +109,9 @@ function GeneratedSchedule({
       }
 
       alert('Erro ao aprovar a escala.');
+      setWeekData(null);
+      setShiftsData(null);
+      setPreviewSchedule(null);
       navigate('/staff');
     }
   }
