@@ -5,7 +5,7 @@ uvicorn[standard]
 # Authentication
 PyJWT
 passlib[bcrypt]
-bcrypt=3.2.2
+bcrypt==3.2.2
 python-multipart
 
 # Database
