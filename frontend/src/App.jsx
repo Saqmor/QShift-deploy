@@ -67,6 +67,7 @@ function App() {
               setStartDate={setStartDate}
               isLoading={isLoading}
               setIsLoading={setIsLoading}
+              employees={employees}
             />
           }
         />
