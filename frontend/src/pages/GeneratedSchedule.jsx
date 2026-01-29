@@ -24,11 +24,14 @@ function GeneratedSchedule({
   const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
-    if (!previewSchedule) return;
+    if (!previewSchedule || !weekData || employees.length === 0) {
+      navigate('/staff');
+      return;
+    }
     if (isLoading) {
       setIsLoading(false);
     }
-  }, [previewSchedule]);
+  }, [previewSchedule, weekData, navigate]);
 
   const handleCancel = async () => {
     setWeekData(null);

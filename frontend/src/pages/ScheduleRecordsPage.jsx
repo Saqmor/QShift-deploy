@@ -83,7 +83,7 @@ function ScheduleRecordsPage({
   useEffect(() => {
     async function generateSchedule() {
       if (!weekRecords?.id) {
-        setIsLoading(false);
+        navigate('/reports');
         return;
       }
       if (schedulesCache[weekRecords.id]) {
@@ -240,11 +240,10 @@ function ScheduleRecordsPage({
           <button
             onClick={previousWeek}
             disabled={weeksList.length - 1 <= currentIdxWeek}
-            className={`p-2 rounded-lg text-xonter  ${
-              weeksList.length - 1 <= currentIdxWeek
+            className={`p-2 rounded-lg text-xonter  ${weeksList.length - 1 <= currentIdxWeek
                 ? `opacity-50 cursor-not-allowed`
                 : `hover:bg-slate-700`
-            }`}
+              }`}
             title="Previous week"
           >
             <ChevronLeft size={24} className="text-slate-300" />
@@ -259,9 +258,8 @@ function ScheduleRecordsPage({
           <button
             onClick={nextWeek}
             disabled={currentIdxWeek <= 0}
-            className={`p-2 rounded-lg ${
-              currentIdxWeek <= 0 ? `opacity-50 cursor-not-allowed` : `hover:bg-slate-700`
-            }`}
+            className={`p-2 rounded-lg ${currentIdxWeek <= 0 ? `opacity-50 cursor-not-allowed` : `hover:bg-slate-700`
+              }`}
             title="Next month"
           >
             <ChevronRight size={24} className="text-slate-300" />
