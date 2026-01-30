@@ -82,11 +82,7 @@ function ScheduleRecordsPage({
 
   useEffect(() => {
     async function generateSchedule() {
-      if (!weekRecords?.id || !weeksList) {
-        navigate('/reports');
-        return;
-      }
-      if (schedulesCache[weekRecords.id]) {
+      if (schedulesCache[weekRecords?.id]) {
         setScheduleData(schedulesCache[weekRecords.id]);
         return;
       }
@@ -229,10 +225,6 @@ function ScheduleRecordsPage({
     );
   }
 
-  if (!weekRecords || !weeksList) {
-    return null;
-  }
-
   return (
     <BaseLayout
       showSidebar={false}
@@ -244,9 +236,9 @@ function ScheduleRecordsPage({
         <div className="flex items-center gap-4 ml-8">
           <button
             onClick={previousWeek}
-            disabled={weeksList.length - 1 <= currentIdxWeek}
+            disabled={!weeksList || weeksList.length - 1 <= currentIdxWeek}
             className={`p-2 rounded-lg text-xonter  ${
-              weeksList.length - 1 <= currentIdxWeek
+              !weeksList || weeksList.length - 1 <= currentIdxWeek
                 ? `opacity-50 cursor-not-allowed`
                 : `hover:bg-slate-700`
             }`}
@@ -272,12 +264,14 @@ function ScheduleRecordsPage({
             <ChevronRight size={24} className="text-slate-300" />
           </button>
           <div className="text-sm text-slate-400 ml-4">
-            {weeksList.length > 0 ? `Week ${currentIdxWeek + 1} of ${weeksList.length}` : ``}
+            {weeksList && weeksList.length > 0
+              ? `Week ${currentIdxWeek + 1} of ${weeksList.length}`
+              : ``}
           </div>
         </div>
       </Header>
       <div>
-        {weeksList.length <= 0 ? (
+        {!weeksList || weeksList.length <= 0 ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <p className="text-slate-400 text-lg">No weekly schedule created</p>
@@ -315,7 +309,7 @@ function ScheduleRecordsPage({
               </div>
             </div>
 
-            {weeksList.length > 0 && (
+            {weeksList && weeksList.length > 0 && (
               <div className="justify-end flex flex-1 gap-2">
                 <div className="px-2 py-1.5 rounded text-center font-medium">
                   <button
