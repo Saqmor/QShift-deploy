@@ -52,10 +52,11 @@ function EmployeeSelector({ employeesList, currentEmployee, onToggleEmployee, mo
                 <button
                   key={emp.id}
                   onClick={() => onToggleEmployee(emp, month, year)}
-                  className={`w-full px-3 py-2.5 rounded-lg text-left transition-all flex items-center gap-3 group ${isSelected
+                  className={`w-full px-3 py-2.5 rounded-lg text-left transition-all flex items-center gap-3 group ${
+                    isSelected
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'text-slate-300 hover:bg-slate-700/50'
-                    }`}
+                  }`}
                 >
                   <div
                     className={`p-1.5 rounded-md ${isSelected ? 'bg-white/20' : 'bg-slate-700 group-hover:bg-slate-600'}`}
@@ -282,10 +283,11 @@ function EmployeeReportsPage({
               {STATS_CONFIG.map((metric) => (
                 <button
                   key={metric.key}
-                  className={`px-1.5 py-2 rounded-lg text-sm font-medium transition-all ${selectedMetric === metric.key
+                  className={`px-1.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                    selectedMetric === metric.key
                       ? `${METRIC_COLORS[metric.key].bgButton} text-white shadow-lg`
                       : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                    } `}
+                  } `}
                   onClick={() => setSelectedMetric(metric.key)}
                 >
                   {metric.label}
@@ -305,6 +307,13 @@ function EmployeeReportsPage({
               }}
             >
               {(() => {
+                if (!employeeYearStats) {
+                  return (
+                    <div className="h-full flex items-center justify-center text-slate-400">
+                      No data available
+                    </div>
+                  );
+                }
                 const data = {
                   labels: months,
                   datasets: [

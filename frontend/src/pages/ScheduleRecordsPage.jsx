@@ -82,7 +82,7 @@ function ScheduleRecordsPage({
 
   useEffect(() => {
     async function generateSchedule() {
-      if (!weekRecords?.id) {
+      if (!weekRecords?.id || !weeksList) {
         navigate('/reports');
         return;
       }
@@ -108,9 +108,10 @@ function ScheduleRecordsPage({
       }
     }
     generateSchedule();
-  }, [weekRecords?.id]);
+  }, [weekRecords?.id, weeksList, navigate]);
+
   const previousWeek = () => {
-    if (weeksList.length - 1 > currentIdxWeek) {
+    if (weeksList && weeksList.length - 1 > currentIdxWeek) {
       setWeekRecords(weeksList[currentIdxWeek + 1]);
       setCurrentIdxWeek(currentIdxWeek + 1);
       setEditMode(false);
@@ -228,6 +229,10 @@ function ScheduleRecordsPage({
     );
   }
 
+  if (!weekRecords || !weeksList) {
+    return null;
+  }
+
   return (
     <BaseLayout
       showSidebar={false}
@@ -240,10 +245,11 @@ function ScheduleRecordsPage({
           <button
             onClick={previousWeek}
             disabled={weeksList.length - 1 <= currentIdxWeek}
-            className={`p-2 rounded-lg text-xonter  ${weeksList.length - 1 <= currentIdxWeek
+            className={`p-2 rounded-lg text-xonter  ${
+              weeksList.length - 1 <= currentIdxWeek
                 ? `opacity-50 cursor-not-allowed`
                 : `hover:bg-slate-700`
-              }`}
+            }`}
             title="Previous week"
           >
             <ChevronLeft size={24} className="text-slate-300" />
@@ -258,8 +264,9 @@ function ScheduleRecordsPage({
           <button
             onClick={nextWeek}
             disabled={currentIdxWeek <= 0}
-            className={`p-2 rounded-lg ${currentIdxWeek <= 0 ? `opacity-50 cursor-not-allowed` : `hover:bg-slate-700`
-              }`}
+            className={`p-2 rounded-lg ${
+              currentIdxWeek <= 0 ? `opacity-50 cursor-not-allowed` : `hover:bg-slate-700`
+            }`}
             title="Next month"
           >
             <ChevronRight size={24} className="text-slate-300" />
