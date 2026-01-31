@@ -237,37 +237,39 @@ function ScheduleRecordsPage({
       currentPage={8}
     >
       <Header title={'Schedule Records'} icon={CalendarRange}>
-        <div className="flex items-center gap-4 ml-8">
-          <button
-            onClick={previousWeek}
-            disabled={!weeksList || weeksList.length - 1 <= currentIdxWeek}
-            className={`p-2 rounded-lg text-xonter  ${
-              !weeksList || weeksList.length - 1 <= currentIdxWeek
-                ? `opacity-50 cursor-not-allowed`
-                : `hover:bg-slate-700`
-            }`}
-            title="Previous week"
-          >
-            <ChevronLeft size={24} className="text-slate-300" />
-          </button>
-          <div
-            className={`flex items-center gap-2 ${weekRecords ? `min-w-[250px] justify-center` : `justify-center`}`}
-          >
-            <span className="text-lg text-slate-200 font-medium">
-              {formatWeekPeriod(weekRecords)}
-            </span>
+        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 md:ml-8 w-full md:w-auto">
+          <div className="flex items-center gap-2 justify-center w-full md:w-auto">
+            <button
+              onClick={previousWeek}
+              disabled={!weeksList || weeksList.length - 1 <= currentIdxWeek}
+              className={`p-2 rounded-lg text-xonter  ${
+                !weeksList || weeksList.length - 1 <= currentIdxWeek
+                  ? `opacity-50 cursor-not-allowed`
+                  : `hover:bg-slate-700`
+              }`}
+              title="Previous week"
+            >
+              <ChevronLeft size={24} className="text-slate-300" />
+            </button>
+            <div
+              className={`flex items-center gap-2 ${weekRecords ? `md:min-w-[250px] justify-center` : `justify-center`}`}
+            >
+              <span className="text-lg text-slate-200 font-medium text-center">
+                {formatWeekPeriod(weekRecords)}
+              </span>
+            </div>
+            <button
+              onClick={nextWeek}
+              disabled={currentIdxWeek <= 0}
+              className={`p-2 rounded-lg ${
+                currentIdxWeek <= 0 ? `opacity-50 cursor-not-allowed` : `hover:bg-slate-700`
+              }`}
+              title="Next month"
+            >
+              <ChevronRight size={24} className="text-slate-300" />
+            </button>
           </div>
-          <button
-            onClick={nextWeek}
-            disabled={currentIdxWeek <= 0}
-            className={`p-2 rounded-lg ${
-              currentIdxWeek <= 0 ? `opacity-50 cursor-not-allowed` : `hover:bg-slate-700`
-            }`}
-            title="Next month"
-          >
-            <ChevronRight size={24} className="text-slate-300" />
-          </button>
-          <div className="text-sm text-slate-400 ml-4">
+          <div className="text-sm text-slate-400 md:ml-4">
             {weeksList && weeksList.length > 0
               ? `Week ${currentIdxWeek + 1} of ${weeksList.length}`
               : ``}
