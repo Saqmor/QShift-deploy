@@ -331,7 +331,7 @@ function AvailabilityPage({ selectEditEmployee, setSelectEditEmployee, isLoading
           <button
             onClick={handleSave}
             disabled={!name.trim()}
-            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="px-6 py-2.5 bg-blue-600 hover:bg-indigo-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             Save
