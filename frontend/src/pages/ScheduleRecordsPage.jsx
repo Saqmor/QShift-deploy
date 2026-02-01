@@ -303,12 +303,12 @@ function ScheduleRecordsPage({
           </>
         )}
         {!editMode ? (
-          <div className="flex mt-4">
-            <div className="flex-1 justify-start flex">
-              <div className="px-2 py-1.5 rounded text-center font-medium">
+          <div className="flex flex-col-reverse sm:flex-row mt-4 gap-3 sm:gap-0">
+            <div className="flex-1 justify-center sm:justify-start flex w-full sm:w-auto">
+              <div className="w-full sm:w-auto px-0 sm:px-2 py-1.5 rounded text-center font-medium">
                 <button
                   onClick={handleBack}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="w-full sm:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   Back
                 </button>
@@ -316,21 +316,21 @@ function ScheduleRecordsPage({
             </div>
 
             {weeksList && weeksList.length > 0 && (
-              <div className="justify-end flex flex-1 gap-2">
-                <div className="px-2 py-1.5 rounded text-center font-medium">
+              <div className="justify-end flex flex-col sm:flex-row flex-1 gap-2 w-full sm:w-auto">
+                <div className="w-full sm:w-auto px-0 sm:px-2 py-1.5 rounded text-center font-medium">
                   <button
                     onClick={handleExportCSV}
-                    className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium sm:w-auto whitespace-nowrap"
+                    className="w-full sm:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium sm:w-auto whitespace-nowrap"
                     title="Export schedule to CSV"
                   >
                     <FileSpreadsheet size={20} />
                     Export CSV
                   </button>
                 </div>
-                <div className="px-1 py-1.5 rounded text-center font-medium">
+                <div className="w-full sm:w-auto px-0 sm:px-1 py-1.5 rounded text-center font-medium">
                   <button
                     onClick={handleEdit}
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium sm:w-auto sm:ml-auto"
+                    className="w-full sm:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium sm:w-auto sm:ml-auto"
                   >
                     {`Edit`}
                   </button>
@@ -339,22 +339,22 @@ function ScheduleRecordsPage({
             )}
           </div>
         ) : (
-          <div className="flex mt-4">
-            <div className="justify-end flex flex-1">
-              <div className="px-5 py-1.5 rounded text-center font-medium">
+          <div className="flex flex-col-reverse sm:flex-row mt-4 gap-3 sm:gap-0">
+            <div className="justify-center sm:justify-start flex flex-1 w-full sm:w-auto">
+              <div className="w-full sm:w-auto px-0 sm:px-5 py-1.5 rounded text-center font-medium">
                 <button
                   onClick={handleDeleteSchedule}
-                  className="items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  className="w-full sm:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                 >
                   {`Delete`}
                 </button>
               </div>
             </div>
-            <div className="justify-end flex">
-              <div className="px-2 py-1.5 rounded text-center font-medium">
+            <div className="justify-center sm:justify-end flex w-full sm:w-auto">
+              <div className="w-full sm:w-auto px-0 sm:px-2 py-1.5 rounded text-center font-medium">
                 <button
                   onClick={handleSave}
-                  className="items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="w-full sm:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   {`Save`}
                 </button>
