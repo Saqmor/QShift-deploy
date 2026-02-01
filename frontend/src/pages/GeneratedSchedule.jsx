@@ -126,31 +126,31 @@ function GeneratedSchedule({
         />
 
         {!editMode ? (
-          <div className="flex mt-4">
-            <div className="flex-1 justify-start flex">
-              <div className="px-2 py-1.5 rounded text-center font-medium">
+          <div className="flex flex-col-reverse sm:flex-row mt-4 gap-3 sm:gap-0">
+            <div className="flex-1 justify-center sm:justify-start flex w-full sm:w-auto">
+              <div className="w-full sm:w-auto px-0 sm:px-2 py-1.5 rounded text-center font-medium">
                 <button
                   onClick={handleCancel}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="w-full sm:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   Cancel
                 </button>
               </div>
             </div>
 
-            <div className="justify-end flex flex-1">
-              <div className="px-2 py-1.5 rounded text-center font-medium">
+            <div className="justify-end flex flex-col sm:flex-row flex-1 w-full sm:w-auto gap-2 sm:gap-0">
+              <div className="w-full sm:w-auto px-0 sm:px-2 py-1.5 rounded text-center font-medium">
                 <button
                   onClick={handleEdit}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="w-full sm:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   Edit
                 </button>
               </div>
-              <div className="px-2 py-1.5 rounded text-center font-medium">
+              <div className="w-full sm:w-auto px-0 sm:px-2 py-1.5 rounded text-center font-medium">
                 <button
                   onClick={handleApproved}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="w-full sm:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   Approved
                 </button>
@@ -159,11 +159,11 @@ function GeneratedSchedule({
           </div>
         ) : (
           <div className="flex mt-4">
-            <div className="flex-1 justify-end flex">
-              <div className="px-40 py-1.5 rounded text-center font-medium">
+            <div className="flex-1 justify-center sm:justify-end flex w-full">
+              <div className="w-full sm:w-auto px-0 sm:px-40 py-1.5 rounded text-center font-medium">
                 <button
                   onClick={handleEdit}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="w-full sm:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   Save
                 </button>
