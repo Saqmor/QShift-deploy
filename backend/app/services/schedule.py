@@ -1,4 +1,7 @@
+import hashlib
+import hmac
 import json
+import time as time_module
 from datetime import datetime, time, timezone
 from sqlalchemy import false
 from sqlalchemy.orm import Session
@@ -109,6 +112,104 @@ def build_schedule_generation_job_schema(
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def build_schedule_generation_dispatch_request(
+    *,
+    job_id: UUID,
+    payload: schemas.ScheduleGenerationDispatchPayload,
+):
+    from app.core.config import settings
+
+    core_api_base_url = settings.CORE_API_BASE_URL.rstrip("/")
+    callback_url = f"{core_api_base_url}/api/v1/internal/schedule-generation-results"
+    return schemas.ScheduleGenerationDispatchRequest(
+        job_id=job_id,
+        callback_url=callback_url,
+        payload=payload,
+    )
+
+
+def build_schedule_callback_signature(
+    *,
+    secret: str,
+    timestamp: str,
+    raw_body: bytes,
+) -> str:
+    message = f"{timestamp}.".encode("utf-8") + raw_body
+    digest = hmac.new(
+        secret.encode("utf-8"),
+        message,
+        hashlib.sha256,
+    ).hexdigest()
+    return f"sha256={digest}"
+
+
+def is_schedule_callback_signature_valid(
+    *,
+    secret: str,
+    timestamp: str,
+    raw_body: bytes,
+    provided_signature: str,
+) -> bool:
+    expected_signature = build_schedule_callback_signature(
+        secret=secret,
+        timestamp=timestamp,
+        raw_body=raw_body,
+    )
+    return hmac.compare_digest(expected_signature, provided_signature)
+
+
+def is_schedule_callback_timestamp_valid(
+    *,
+    timestamp: str,
+    tolerance_seconds: int,
+    now_timestamp: int | None = None,
+) -> bool:
+    try:
+        timestamp_int = int(timestamp)
+    except (TypeError, ValueError):
+        return False
+
+    if now_timestamp is None:
+        now_timestamp = int(time_module.time())
+
+    return abs(now_timestamp - timestamp_int) <= tolerance_seconds
+
+
+def apply_schedule_generation_callback(
+    *,
+    job,
+    callback_payload: schemas.ScheduleGenerationCallbackIn,
+) -> schemas.ScheduleGenerationJobOut:
+    terminal_statuses = {
+        schemas.ScheduleGenerationJobStatus.DONE.value,
+        schemas.ScheduleGenerationJobStatus.FAILED.value,
+    }
+    result_payload = None
+    if callback_payload.result is not None:
+        result_payload = callback_payload.result.model_dump(mode="json")
+
+    if callback_payload.status not in (
+        schemas.ScheduleGenerationJobStatus.DONE,
+        schemas.ScheduleGenerationJobStatus.FAILED,
+    ):
+        raise ValueError("invalid schedule generation callback status")
+
+    if job.status in terminal_statuses:
+        if (
+            job.status == callback_payload.status.value
+            and job.result_payload == result_payload
+            and job.error_message == callback_payload.error
+        ):
+            return build_schedule_generation_job_schema(job)
+        raise ValueError("schedule generation job already finalized")
+
+    job.status = callback_payload.status.value
+    job.result_payload = result_payload
+    job.error_message = callback_payload.error
+    job.finished_at = utcnow()
+    return build_schedule_generation_job_schema(job)
 
 
 def build_schedule_schema_from_db(week_id: UUID, user_id: UUID, db: Session):

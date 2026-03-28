@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+from fastapi import BackgroundTasks, FastAPI
 
 import app.schemas.schedule as schemas
 from app.core.logging import logger
-from app.services.schedule import ScheduleGenerator
+from schedule_generator import service
 
 app = FastAPI(title="QShift Schedule Generator")
 
@@ -21,19 +21,18 @@ def healthz():
 
 @app.post(
     "/internal/generate-schedule",
-    response_model=schemas.SchedulePreviewOut,
+    response_model=schemas.ScheduleGenerationJobAcceptedOut,
+    status_code=202,
 )
 def generate_schedule(
     dispatch_request: schemas.ScheduleGenerationDispatchRequest,
+    background_tasks: BackgroundTasks,
 ):
-    schedule_generator = ScheduleGenerator.from_payload(
-        payload=dispatch_request.payload
+    background_tasks.add_task(
+        service.process_schedule_generation_job,
+        dispatch_request,
     )
-    possible = schedule_generator.check_possibility()
-
-    if possible:
-        schedule_out = schedule_generator.generate_schedule()
-    else:
-        schedule_out = None
-
-    return schemas.SchedulePreviewOut(possible=possible, schedule=schedule_out)
+    return schemas.ScheduleGenerationJobAcceptedOut(
+        job_id=dispatch_request.job_id,
+        status=schemas.ScheduleGenerationJobStatus.PROCESSING,
+    )

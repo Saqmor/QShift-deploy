@@ -1,0 +1,116 @@
+import json
+import time
+from urllib import error as urllib_error
+from urllib import request as urllib_request
+
+import app.schemas.schedule as schemas
+from app.core.logging import logger
+from app.services.schedule import ScheduleGenerator, build_schedule_callback_signature
+from schedule_generator.config import settings
+
+
+def build_schedule_preview(
+    dispatch_request: schemas.ScheduleGenerationDispatchRequest,
+) -> schemas.SchedulePreviewOut:
+    schedule_generator = ScheduleGenerator.from_payload(
+        payload=dispatch_request.payload
+    )
+    possible = schedule_generator.check_possibility()
+
+    if possible:
+        schedule_out = schedule_generator.generate_schedule()
+    else:
+        schedule_out = None
+
+    return schemas.SchedulePreviewOut(possible=possible, schedule=schedule_out)
+
+
+def _post_schedule_generation_callback(
+    *,
+    callback_url: str,
+    raw_body: bytes,
+    timestamp: str,
+    signature: str,
+) -> None:
+    request = urllib_request.Request(
+        callback_url,
+        data=raw_body,
+        headers={
+            "Content-Type": "application/json",
+            "X-Timestamp": timestamp,
+            "X-Signature": signature,
+        },
+        method="POST",
+    )
+    with urllib_request.urlopen(
+        request,
+        timeout=settings.SCHEDULE_CALLBACK_TIMEOUT_SECONDS,
+    ) as response:
+        status_code = getattr(response, "status", response.getcode())
+        if status_code >= 400:
+            raise RuntimeError(
+                f"schedule callback returned unexpected status {status_code}"
+            )
+
+
+def send_schedule_generation_callback(
+    *,
+    dispatch_request: schemas.ScheduleGenerationDispatchRequest,
+    callback_payload: schemas.ScheduleGenerationCallbackIn,
+) -> None:
+    raw_body = json.dumps(callback_payload.model_dump(mode="json")).encode("utf-8")
+    timestamp = str(int(time.time()))
+    signature = build_schedule_callback_signature(
+        secret=settings.SCHEDULE_CALLBACK_SECRET,
+        timestamp=timestamp,
+        raw_body=raw_body,
+    )
+
+    last_error = None
+    for attempt in range(settings.SCHEDULE_CALLBACK_MAX_RETRIES):
+        try:
+            _post_schedule_generation_callback(
+                callback_url=dispatch_request.callback_url,
+                raw_body=raw_body,
+                timestamp=timestamp,
+                signature=signature,
+            )
+            return
+        except (urllib_error.URLError, urllib_error.HTTPError, TimeoutError, OSError, RuntimeError) as exc:
+            last_error = exc
+            logger.error(
+                "Schedule callback failed for job %s on attempt %s: %s",
+                dispatch_request.job_id,
+                attempt + 1,
+                exc,
+            )
+            if attempt + 1 < settings.SCHEDULE_CALLBACK_MAX_RETRIES:
+                time.sleep(settings.SCHEDULE_CALLBACK_RETRY_DELAY_SECONDS)
+
+    raise RuntimeError("unable to deliver schedule generation callback") from last_error
+
+
+def process_schedule_generation_job(
+    dispatch_request: schemas.ScheduleGenerationDispatchRequest,
+) -> None:
+    try:
+        preview = build_schedule_preview(dispatch_request)
+        callback_payload = schemas.ScheduleGenerationCallbackIn(
+            job_id=dispatch_request.job_id,
+            status=schemas.ScheduleGenerationJobStatus.DONE,
+            result=preview,
+            error=None,
+        )
+    except Exception as exc:
+        logger.error("Schedule generation failed for job %s: %s", dispatch_request.job_id, exc)
+        callback_payload = schemas.ScheduleGenerationCallbackIn(
+            job_id=dispatch_request.job_id,
+            status=schemas.ScheduleGenerationJobStatus.FAILED,
+            result=None,
+            error="schedule generation failed",
+        )
+
+    send_schedule_generation_callback(
+        dispatch_request=dispatch_request,
+        callback_payload=callback_payload,
+    )

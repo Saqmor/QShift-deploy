@@ -86,6 +86,7 @@ class ScheduleGenerationDispatchPayload(BaseModel):
 
 class ScheduleGenerationDispatchRequest(BaseModel):
     job_id: uuid.UUID
+    callback_url: str
     payload: ScheduleGenerationDispatchPayload
 
 
@@ -95,6 +96,13 @@ class ScheduleGenerationJobAcceptedOut(BaseModel):
 
 
 class ScheduleGenerationJobOut(BaseModel):
+    job_id: uuid.UUID
+    status: ScheduleGenerationJobStatus
+    result: Optional[SchedulePreviewOut] = None
+    error: Optional[str] = None
+
+
+class ScheduleGenerationCallbackIn(BaseModel):
     job_id: uuid.UUID
     status: ScheduleGenerationJobStatus
     result: Optional[SchedulePreviewOut] = None

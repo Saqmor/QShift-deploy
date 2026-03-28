@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, Request, status, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 import app.schemas.schedule as schemas
@@ -7,6 +7,7 @@ import app.services.schedule as schedule_service
 from app.models import ShiftAssignment, Employee, ScheduleGenerationJob, Week
 from app.models.shift import Shift
 from app.api.dependencies import current_user_id
+from app.core.config import settings
 from app.core.db import get_session
 
 router = APIRouter(prefix="", tags=["schedule"])
@@ -95,10 +96,6 @@ def generate_preview_schedule(
         user_id=user_id,
         shift_vector=payload.shift_vector,
     )
-    dispatch_request = schemas.ScheduleGenerationDispatchRequest(
-        job_id=UUID(int=0),
-        payload=dispatch_payload,
-    )
     job = ScheduleGenerationJob(
         user_id=user_id,
         status=schemas.ScheduleGenerationJobStatus.PENDING.value,
@@ -108,7 +105,10 @@ def generate_preview_schedule(
     db.commit()
     db.refresh(job)
 
-    dispatch_request = dispatch_request.model_copy(update={"job_id": job.id})
+    dispatch_request = schedule_service.build_schedule_generation_dispatch_request(
+        job_id=job.id,
+        payload=dispatch_payload,
+    )
     job.request_payload = dispatch_request.model_dump(mode="json")
 
     try:
@@ -128,6 +128,74 @@ def generate_preview_schedule(
         job_id=job.id,
         status=schemas.ScheduleGenerationJobStatus(job.status),
     )
+
+
+@router.post(
+    "/internal/schedule-generation-results",
+    response_model=schemas.ScheduleGenerationJobOut,
+    status_code=status.HTTP_200_OK,
+)
+async def receive_schedule_generation_result(
+    request: Request,
+    db: Session = Depends(get_session),
+):
+    raw_body = await request.body()
+    timestamp = request.headers.get("X-Timestamp")
+    signature = request.headers.get("X-Signature")
+
+    if timestamp is None or signature is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="missing callback authentication headers",
+        )
+
+    if not schedule_service.is_schedule_callback_timestamp_valid(
+        timestamp=timestamp,
+        tolerance_seconds=settings.SCHEDULE_CALLBACK_TOLERANCE_SECONDS,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid callback timestamp",
+        )
+
+    if not schedule_service.is_schedule_callback_signature_valid(
+        secret=settings.SCHEDULE_CALLBACK_SECRET,
+        timestamp=timestamp,
+        raw_body=raw_body,
+        provided_signature=signature,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid callback signature",
+        )
+
+    callback_payload = schemas.ScheduleGenerationCallbackIn.model_validate_json(raw_body)
+    job = db.get(ScheduleGenerationJob, callback_payload.job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Schedule generation job not found",
+        )
+
+    try:
+        job_schema = schedule_service.apply_schedule_generation_callback(
+            job=job,
+            callback_payload=callback_payload,
+        )
+    except ValueError as exc:
+        if str(exc) == "schedule generation job already finalized":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=str(exc),
+            ) from exc
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+    db.add(job)
+    db.commit()
+    return job_schema
 
 
 @router.get(

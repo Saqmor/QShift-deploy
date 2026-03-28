@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     SCHEDULE_GENERATOR_BASE_URL: str = "http://localhost:8001"
     SCHEDULE_GENERATOR_TIMEOUT_SECONDS: float = 10.0
+    CORE_API_BASE_URL: str
+    SCHEDULE_CALLBACK_SECRET: str
+    SCHEDULE_CALLBACK_TOLERANCE_SECONDS: int = 300
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

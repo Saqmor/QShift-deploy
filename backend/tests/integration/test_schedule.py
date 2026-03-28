@@ -1,7 +1,11 @@
+import json
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 
 import app.services.schedule as schedule_service
+from app.core.config import settings
 
 
 def _normalize_preview_shift_vector(shifts):
@@ -15,6 +19,21 @@ def _normalize_preview_shift_vector(shifts):
         }
         for shift in shifts
     ]
+
+
+def _build_signed_callback_headers(raw_body: bytes, timestamp: str | None = None):
+    if timestamp is None:
+        timestamp = str(int(time.time()))
+    signature = schedule_service.build_schedule_callback_signature(
+        secret=settings.SCHEDULE_CALLBACK_SECRET,
+        timestamp=timestamp,
+        raw_body=raw_body,
+    )
+    return {
+        "Content-Type": "application/json",
+        "X-Timestamp": timestamp,
+        "X-Signature": signature,
+    }
 
 
 @pytest.mark.integration
@@ -202,6 +221,9 @@ def test_preview_schedule_creates_processing_job_and_dispatches_payload(
         dispatch_request.payload.model_dump(mode="json")["shift_vector"]
         == _normalize_preview_shift_vector(shifts)
     )
+    assert dispatch_request.callback_url.endswith(
+        "/api/v1/internal/schedule-generation-results"
+    )
     assert len(dispatch_request.payload.employees) == len(employees)
     assert len(dispatch_request.payload.availabilities) > 0
 
@@ -300,6 +322,140 @@ def test_read_schedule_generation_job_not_found(client: TestClient):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Schedule generation job not found"
+
+
+@pytest.mark.integration
+def test_schedule_generation_callback_updates_job_with_valid_signature(
+    client: TestClient,
+    seeded_data,
+    dispatched_schedule_jobs,
+):
+    """Should update the job result when a valid signed callback is received."""
+    week_id = seeded_data["week_id"]
+    shifts = client.get(f"/api/v1/weeks/{week_id}/shifts").json()
+
+    preview_response = client.post(
+        "/api/v1/preview-schedule",
+        json={"shift_vector": shifts},
+    )
+    job_id = preview_response.json()["job_id"]
+
+    raw_body = json.dumps(
+        {
+            "job_id": job_id,
+            "status": "done",
+            "result": {"possible": False, "schedule": None},
+            "error": None,
+        }
+    ).encode("utf-8")
+
+    callback_response = client.post(
+        "/api/v1/internal/schedule-generation-results",
+        content=raw_body,
+        headers=_build_signed_callback_headers(raw_body),
+    )
+
+    assert callback_response.status_code == 200
+    assert callback_response.json() == {
+        "job_id": job_id,
+        "status": "done",
+        "result": {"possible": False, "schedule": None},
+        "error": None,
+    }
+
+    job_response = client.get(f"/api/v1/schedule-generation-jobs/{job_id}")
+    assert job_response.status_code == 200
+    assert job_response.json()["status"] == "done"
+    assert job_response.json()["result"] == {"possible": False, "schedule": None}
+    assert len(dispatched_schedule_jobs) == 1
+
+
+@pytest.mark.integration
+def test_schedule_generation_callback_rejects_invalid_signature(
+    client: TestClient,
+    seeded_data,
+    dispatched_schedule_jobs,
+):
+    """Should reject callbacks signed with the wrong secret."""
+    week_id = seeded_data["week_id"]
+    shifts = client.get(f"/api/v1/weeks/{week_id}/shifts").json()
+
+    preview_response = client.post(
+        "/api/v1/preview-schedule",
+        json={"shift_vector": shifts},
+    )
+    job_id = preview_response.json()["job_id"]
+
+    raw_body = json.dumps(
+        {
+            "job_id": job_id,
+            "status": "done",
+            "result": {"possible": True, "schedule": {"shifts": []}},
+            "error": None,
+        }
+    ).encode("utf-8")
+    headers = {
+        "Content-Type": "application/json",
+        "X-Timestamp": str(int(time.time())),
+        "X-Signature": "sha256=invalid",
+    }
+
+    callback_response = client.post(
+        "/api/v1/internal/schedule-generation-results",
+        content=raw_body,
+        headers=headers,
+    )
+
+    assert callback_response.status_code == 401
+    assert callback_response.json()["detail"] == "invalid callback signature"
+    assert len(dispatched_schedule_jobs) == 1
+
+    job_response = client.get(f"/api/v1/schedule-generation-jobs/{job_id}")
+    assert job_response.status_code == 200
+    assert job_response.json()["status"] == "processing"
+
+
+@pytest.mark.integration
+def test_schedule_generation_callback_is_idempotent_for_same_payload(
+    client: TestClient,
+    seeded_data,
+    dispatched_schedule_jobs,
+):
+    """Should accept the same callback payload more than once without changing the result."""
+    week_id = seeded_data["week_id"]
+    shifts = client.get(f"/api/v1/weeks/{week_id}/shifts").json()
+
+    preview_response = client.post(
+        "/api/v1/preview-schedule",
+        json={"shift_vector": shifts},
+    )
+    job_id = preview_response.json()["job_id"]
+
+    raw_body = json.dumps(
+        {
+            "job_id": job_id,
+            "status": "done",
+            "result": {"possible": False, "schedule": None},
+            "error": None,
+        }
+    ).encode("utf-8")
+    headers = _build_signed_callback_headers(raw_body)
+
+    first_response = client.post(
+        "/api/v1/internal/schedule-generation-results",
+        content=raw_body,
+        headers=headers,
+    )
+    second_response = client.post(
+        "/api/v1/internal/schedule-generation-results",
+        content=raw_body,
+        headers=headers,
+    )
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    assert first_response.json() == second_response.json()
+    assert len(dispatched_schedule_jobs) == 1
 
 
 @pytest.mark.integration

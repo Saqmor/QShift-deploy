@@ -6,13 +6,14 @@ from fastapi.testclient import TestClient
 import app.schemas.schedule as schemas
 from app.services.schedule import ScheduleGenerator
 from schedule_generator.main import app
+from schedule_generator import service as generator_service
 
 
-def _build_dispatch_payload():
+def _build_dispatch_request():
     employee_morning_id = uuid.uuid4()
     employee_afternoon_id = uuid.uuid4()
 
-    return schemas.ScheduleGenerationDispatchPayload(
+    payload = schemas.ScheduleGenerationDispatchPayload(
         shift_vector=[
             schemas.PreviewShiftBase(
                 id=uuid.uuid4(),
@@ -54,13 +55,18 @@ def _build_dispatch_payload():
             ),
         ],
     )
+    return schemas.ScheduleGenerationDispatchRequest(
+        job_id=uuid.uuid4(),
+        callback_url="http://main-api/api/v1/internal/schedule-generation-results",
+        payload=payload,
+    )
 
 
 @pytest.mark.unit
 def test_schedule_generator_from_payload_builds_expected_assignments():
-    payload = _build_dispatch_payload()
+    dispatch_request = _build_dispatch_request()
 
-    generator = ScheduleGenerator.from_payload(payload=payload)
+    generator = ScheduleGenerator.from_payload(payload=dispatch_request.payload)
 
     assert generator.check_possibility() is True
 
@@ -79,62 +85,76 @@ def test_schedule_generator_from_payload_builds_expected_assignments():
 
 
 @pytest.mark.unit
-def test_schedule_generator_service_returns_preview_for_feasible_payload():
-    client = TestClient(app)
-    payload = _build_dispatch_payload()
+def test_build_schedule_preview_returns_preview_for_feasible_payload():
+    dispatch_request = _build_dispatch_request()
 
-    response = client.post(
-        "/internal/generate-schedule",
-        json={
-            "job_id": str(uuid.uuid4()),
-            "payload": payload.model_dump(mode="json"),
-        },
-    )
+    preview = generator_service.build_schedule_preview(dispatch_request)
 
-    assert response.status_code == 200
-    data = response.json()
-    assert data["possible"] is True
-    assert len(data["schedule"]["shifts"]) == 2
-    assert data["schedule"]["shifts"][0]["employees"][0]["name"] == "Morning Employee"
-    assert data["schedule"]["shifts"][1]["employees"][0]["name"] == "Afternoon Employee"
+    assert preview.possible is True
+    assert len(preview.schedule.shifts) == 2
+    assert preview.schedule.shifts[0].employees[0].name == "Morning Employee"
+    assert preview.schedule.shifts[1].employees[0].name == "Afternoon Employee"
 
 
 @pytest.mark.unit
-def test_schedule_generator_service_returns_not_possible_without_employees():
+def test_generate_schedule_route_accepts_job_and_sends_callback(monkeypatch):
     client = TestClient(app)
-    payload = _build_dispatch_payload()
+    dispatch_request = _build_dispatch_request()
+    sent_callbacks = []
+
+    def fake_send_schedule_generation_callback(*, dispatch_request, callback_payload):
+        sent_callbacks.append((dispatch_request, callback_payload))
+
+    monkeypatch.setattr(
+        generator_service,
+        "send_schedule_generation_callback",
+        fake_send_schedule_generation_callback,
+    )
 
     response = client.post(
         "/internal/generate-schedule",
-        json={
-            "job_id": str(uuid.uuid4()),
-            "payload": {
-                **payload.model_dump(mode="json"),
-                "employees": [],
-                "availabilities": [],
-            },
-        },
+        json=dispatch_request.model_dump(mode="json"),
     )
 
-    assert response.status_code == 200
-    assert response.json() == {"possible": False, "schedule": None}
+    assert response.status_code == 202
+    assert response.json() == {
+        "job_id": str(dispatch_request.job_id),
+        "status": "processing",
+    }
+    assert len(sent_callbacks) == 1
+    sent_request, callback_payload = sent_callbacks[0]
+    assert sent_request.job_id == dispatch_request.job_id
+    assert callback_payload.status == schemas.ScheduleGenerationJobStatus.DONE
+    assert callback_payload.result.possible is True
 
 
 @pytest.mark.unit
-def test_schedule_generator_service_returns_not_possible_without_availabilities():
-    client = TestClient(app)
-    payload = _build_dispatch_payload()
+def test_process_schedule_generation_job_reports_failure_when_preview_breaks(monkeypatch):
+    dispatch_request = _build_dispatch_request()
+    sent_callbacks = []
 
-    response = client.post(
-        "/internal/generate-schedule",
-        json={
-            "job_id": str(uuid.uuid4()),
-            "payload": {
-                **payload.model_dump(mode="json"),
-                "availabilities": [],
-            },
-        },
+    def failing_build_schedule_preview(_dispatch_request):
+        raise RuntimeError("boom")
+
+    def fake_send_schedule_generation_callback(*, dispatch_request, callback_payload):
+        sent_callbacks.append((dispatch_request, callback_payload))
+
+    monkeypatch.setattr(
+        generator_service,
+        "build_schedule_preview",
+        failing_build_schedule_preview,
+    )
+    monkeypatch.setattr(
+        generator_service,
+        "send_schedule_generation_callback",
+        fake_send_schedule_generation_callback,
     )
 
-    assert response.status_code == 200
-    assert response.json() == {"possible": False, "schedule": None}
+    generator_service.process_schedule_generation_job(dispatch_request)
+
+    assert len(sent_callbacks) == 1
+    sent_request, callback_payload = sent_callbacks[0]
+    assert sent_request.job_id == dispatch_request.job_id
+    assert callback_payload.status == schemas.ScheduleGenerationJobStatus.FAILED
+    assert callback_payload.result is None
+    assert callback_payload.error == "schedule generation failed"
