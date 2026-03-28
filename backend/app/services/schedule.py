@@ -1,5 +1,3 @@
-import hashlib
-import hmac
 import json
 import time as time_module
 from datetime import datetime, timezone
@@ -12,6 +10,10 @@ from urllib import request as urllib_request
 
 import app.schemas.schedule as schemas
 from app.core.logging import logger
+from shared.schedule_callback import (
+    build_schedule_callback_signature,
+    is_schedule_callback_signature_valid,
+)
 
 
 def build_schedule_generation_payload(
@@ -126,37 +128,6 @@ def build_schedule_generation_dispatch_request(
         callback_url=callback_url,
         payload=payload,
     )
-
-
-def build_schedule_callback_signature(
-    *,
-    secret: str,
-    timestamp: str,
-    raw_body: bytes,
-) -> str:
-    message = f"{timestamp}.".encode("utf-8") + raw_body
-    digest = hmac.new(
-        secret.encode("utf-8"),
-        message,
-        hashlib.sha256,
-    ).hexdigest()
-    return f"sha256={digest}"
-
-
-def is_schedule_callback_signature_valid(
-    *,
-    secret: str,
-    timestamp: str,
-    raw_body: bytes,
-    provided_signature: str,
-) -> bool:
-    expected_signature = build_schedule_callback_signature(
-        secret=secret,
-        timestamp=timestamp,
-        raw_body=raw_body,
-    )
-    return hmac.compare_digest(expected_signature, provided_signature)
-
 
 def is_schedule_callback_timestamp_valid(
     *,

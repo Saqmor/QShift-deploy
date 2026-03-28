@@ -5,9 +5,9 @@ from urllib import request as urllib_request
 
 import app.schemas.schedule as schemas
 from app.core.logging import logger
-from app.services.schedule import build_schedule_callback_signature
 from schedule_generator.config import settings
 from schedule_generator.solver import ScheduleGenerator
+from shared.schedule_callback import build_schedule_callback_signature
 
 
 def build_schedule_preview(
