@@ -63,7 +63,7 @@ function App() {
       <Routes>
         <Route
           path="/login"
-          element={<LoginPage isLoading={isLoading} setIsLoading={setIsLoading} />}
+          element={<LoginPage />}
         />
         <Route path="/register" element={<RegisterPage />} />
         <Route
@@ -119,8 +119,6 @@ function App() {
               setWeekData={setWeekData}
               setShiftsData={setShiftsData}
               setPreviewSchedule={setPreviewSchedule}
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
             />
           }
         />

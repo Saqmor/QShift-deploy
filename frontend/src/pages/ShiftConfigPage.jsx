@@ -3,14 +3,12 @@ import { MolPageHeader } from '../atomic/MolPageHeader';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Save, RotateCcw, Calendar, Trash2, ArrowLeft } from 'lucide-react';
-import { GeneratedScheduleApi } from '../services/api.js';
 import { daysOfWeek } from '../constants/constantsOfTable.js';
 import { Button } from '../atomic/AtmButton/index.js';
 import { AtmInput } from '../atomic/AtmInput/index.js';
-import { MolLoadingPage } from '../atomic/MolLoadingPage';
-
-const SCHEDULE_JOB_POLL_INTERVAL_MS = 1500;
-const SCHEDULE_JOB_MAX_ATTEMPTS = 120;
+import { ObjRetryStatusBanner } from '../atomic/ObjRetryStatusBanner';
+import { useScheduleCreate } from '../hooks/useScheduleGeneration';
+import { STATUS } from '../hooks/useRetryOnSleep';
 
 function ShiftConfigPage({
   selectedDays,
@@ -18,12 +16,13 @@ function ShiftConfigPage({
   setWeekData,
   setShiftsData,
   setPreviewSchedule,
-  isLoading,
-  setIsLoading,
 }) {
   const navigate = useNavigate();
   const openDaysMask = [];
   const selectedDaysMap = {};
+
+  const { run, status, retryCountdown, retriesLeft, errorInfo, getMessage } = useScheduleCreate();
+  const isBusy = status === STATUS.RUNNING || status === STATUS.WAKING_UP;
 
   useEffect(() => {
     if (!startDate || !selectedDays || selectedDays.length === 0) navigate('/staff');
@@ -142,9 +141,9 @@ function ShiftConfigPage({
     });
     if (errors.length > 0) return { success: false, errors };
     if (shiftsSchedule.length === 0)
-      return { sucess: false, errors: ['Please configure at least one complete shift (with start time, end time, and number of employees).'] };
+      return { success: false, errors: ['Please configure at least one complete shift (with start time, end time, and number of employees).'] };
     setShiftsData(shiftsSchedule);
-    return { sucess: true, data: shiftsSchedule };
+    return { success: true, data: shiftsSchedule };
   };
 
   const convertScheduleData = (shifts) => {
@@ -171,75 +170,45 @@ function ShiftConfigPage({
     return scheduleModified;
   };
 
-  const wait = (ms) => new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
-  const waitForSchedulePreviewJob = async (jobId) => {
-    for (let attempt = 0; attempt < SCHEDULE_JOB_MAX_ATTEMPTS; attempt += 1) {
-      const jobResponse = await GeneratedScheduleApi.getScheduleGenerationJob(jobId);
-      const jobData = jobResponse.data;
-
-      if (jobData.status === 'done') return jobData;
-      if (jobData.status === 'failed') {
-        throw new Error(jobData.error || 'Schedule generation failed.');
-      }
-
-      if (attempt < SCHEDULE_JOB_MAX_ATTEMPTS - 1) {
-        await wait(SCHEDULE_JOB_POLL_INTERVAL_MS);
-      }
-    }
-
-    throw new Error('Schedule generation timed out. Please try again.');
-  };
-
   const createSchedule = async () => {
     const result = handleShiftsSchedule();
-    setIsLoading(true);
-    if (!result.sucess) {
+    if (!result.success) {
       const errorMessage = result.errors.join('\n\n');
-      setIsLoading(false);
       alert(`Please fix the following issues:\n\n${errorMessage}`);
       return;
     }
     const shiftsSchedule = result.data;
-    if (shiftsSchedule) {
-      setIsLoading(true);
-      try {
-        const week = { start_date: startDate.toISOString().split('T')[0], open_days: openDaysMask };
-        setWeekData(week);
-        const responsePreviewJob = await GeneratedScheduleApi.createSchedulePreviewJob({ shift_vector: shiftsSchedule });
-        const previewJobData = await waitForSchedulePreviewJob(responsePreviewJob.data.job_id);
-        const previewScheduleData = previewJobData.result;
-        if (previewScheduleData?.possible && previewScheduleData.schedule) {
-          const convertedData = convertScheduleData(previewScheduleData.schedule.shifts);
-          setPreviewSchedule(convertedData);
-        } else {
-          alert('Unable to generate a viable schedule with the current settings. Check shift and employee settings.');
-          setIsLoading(false);
-          navigate('/staff');
-          return;
-        }
+    const week = { start_date: startDate.toISOString().split('T')[0], open_days: openDaysMask };
+    setWeekData(week);
+
+    const response = await run({ shift_vector: shiftsSchedule });
+
+    if (response?.success) {
+      const previewScheduleData = response.data.result;
+      if (previewScheduleData?.possible && previewScheduleData.schedule) {
+        const convertedData = convertScheduleData(previewScheduleData.schedule.shifts);
+        setPreviewSchedule(convertedData);
         navigate('/schedule');
-      } catch (error) {
-        console.error('Error creating schedule:', error);
-        if (error.response) { alert(`Error: ${error.response.data.detail || 'Error creating schedule'}`); }
-        else if (error.request) { alert('Error: Server did not respond. Check if the backend is running.'); }
-        else { alert(`Error: ${error.message}`); }
-        setIsLoading(false);
+      } else {
+        alert('Unable to generate a viable schedule with the current settings. Check shift and employee settings.');
+        navigate('/staff');
       }
     }
   };
 
-  if (isLoading) return (
-    <BaseLayout currentPage={6} showSidebar={false}>
-      <MolLoadingPage />
-    </BaseLayout>
-  );
-
   return (
     <BaseLayout showSidebar={false} currentPage={6} showSelectionPanel={true} selectionPanelData={{ startDate, selectedDays }}>
       <MolPageHeader title="Shift Configuration" />
+
+      <ObjRetryStatusBanner
+        status={status}
+        retryCountdown={retryCountdown}
+        retriesLeft={retriesLeft}
+        errorInfo={errorInfo}
+        getMessage={getMessage}
+        onRetry={createSchedule}
+      />
+
       <div className="bg-slate-800 rounded-lg overflow-x-auto border border-slate-700 mb-6">
         <table className="w-full">
           <thead>
@@ -270,6 +239,7 @@ function ShiftConfigPage({
                             size="sm"
                             variant="shiftConfig"
                             placeholder="Begin"
+                            disabled={isBusy}
                           />
                           <AtmInput
                             type="time"
@@ -278,6 +248,7 @@ function ShiftConfigPage({
                             size="sm"
                             variant="shiftConfig"
                             placeholder="End"
+                            disabled={isBusy}
                           />
                         </div>
                         <AtmInput
@@ -289,6 +260,7 @@ function ShiftConfigPage({
                           size="sm"
                           variant="shiftConfig"
                           placeholder="Number of employees"
+                          disabled={isBusy}
                         />
                       </div>
                     ) : (
@@ -299,8 +271,8 @@ function ShiftConfigPage({
                 <td className="px-4 py-3 text-center">
                   <button
                     onClick={() => removeShift(weekShift.id)}
-                    disabled={weekShifts.length === 1}
-                    className={`p-2 rounded-lg transition-colors ${weekShifts.length === 1
+                    disabled={weekShifts.length === 1 || isBusy}
+                    className={`p-2 rounded-lg transition-colors ${weekShifts.length === 1 || isBusy
                       ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                       : 'bg-red-600 hover:bg-red-700 text-white'
                       }`}
@@ -317,7 +289,8 @@ function ShiftConfigPage({
 
       <button
         onClick={addTurn}
-        className="w-full mb-6 px-6 py-3 bg-slate-700 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+        disabled={isBusy}
+        className="w-full mb-6 px-6 py-3 bg-slate-700 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Plus className="w-5 h-5" />
         Add shift
@@ -325,22 +298,22 @@ function ShiftConfigPage({
 
       <div className="grid grid-cols-2 md:flex md:flex-wrap gap-3">
         <div className="order-3 md:order-none col-span-1 md:flex-1 justify-start flex">
-          <Button onClick={handleBack} variant='primary' size='lg'>
+          <Button onClick={handleBack} variant='primary' size='lg' disabled={isBusy}>
             <ArrowLeft size={20} />
             Back
           </Button>
         </div>
-        <Button onClick={restoreConfigShift} variant='secondary' className="order-1 md:order-none" size='lg'>
+        <Button onClick={restoreConfigShift} variant='secondary' className="order-1 md:order-none" size='lg' disabled={isBusy}>
           <RotateCcw className="w-4 h-4" />
           Restore settings
         </Button>
-        <Button onClick={saveConfigShift} variant='secondary' className="order-2 md:order-none" size='lg'>
+        <Button onClick={saveConfigShift} variant='secondary' className="order-2 md:order-none" size='lg' disabled={isBusy}>
           <Save className="w-4 h-4" />
           Save settings
         </Button>
-        <Button onClick={createSchedule} variant='primary' className="order-4 md:order-none ml-auto" size='lg'>
+        <Button onClick={createSchedule} variant='primary' className="order-4 md:order-none ml-auto" size='lg' disabled={isBusy}>
           <Calendar className="w-4 h-4" />
-          Create Schedule
+          {isBusy ? 'Generating…' : 'Create Schedule'}
         </Button>
       </div>
     </BaseLayout>

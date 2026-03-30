@@ -49,6 +49,7 @@ export function Button({ onClick, children, fullWidth, responsive, size, variant
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={ButtonTv({ fullWidth, responsive, size, variant, disabled, class: className })}
       {...props}
     >
@@ -130,7 +131,7 @@ export const linkButtonTv = tv({
 
 export function LinkButton({ onClick, children, className = '', type = 'button', ...props }) {
   return (
-    <button type={type} onClick={onClick} className={linkButtonTv({ class: className })} {...props}>
+    <button type={type} onClick={onClick} disabled={props.disabled} className={linkButtonTv({ class: className })} {...props}>
       {children}
     </button>
   );
