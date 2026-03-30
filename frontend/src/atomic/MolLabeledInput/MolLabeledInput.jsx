@@ -4,7 +4,7 @@ import { AtmInput } from '../AtmInput/index.js';
  * MolLabeledInput – label + input pairing
  * Used in login, register, and any form field.
  */
-export function MolLabeledInput({ label, id, type = 'text', placeholder, value, onChange, required, className = '', inputClass = '', variant = 'default' }) {
+export function MolLabeledInput({ label, id, type = 'text', placeholder, value, onChange, required, className = '', disabled, inputClass = '', variant = 'default' }) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
@@ -21,6 +21,7 @@ export function MolLabeledInput({ label, id, type = 'text', placeholder, value, 
         required={required}
         variant={variant}
         className={inputClass}
+        disabled={disabled}
       />
     </div>
   );
