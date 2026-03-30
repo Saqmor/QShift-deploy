@@ -1,47 +1,48 @@
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { MolLoadingPage } from '../atomic/MolLoadingPage';
+import { useState, useEffect } from 'react';
 import { MolLabeledInput } from '../atomic/MolLabeledInput';
 import { ObjAppLayout as BaseLayout } from '../atomic/ObjAppLayout';
 import { Button, LinkButton } from '../atomic/AtmButton/index.js';
 import { AtmText } from '../atomic/AtmText/index.js';
-import { LoginApi } from '../services/api.js';
+import { ObjRetryStatusBanner } from '../atomic/ObjRetryStatusBanner';
+import { useLogin } from '../hooks/useLogin';
+import { STATUS } from '../hooks/useRetryOnSleep';
 
-function LoginPage({ isLoading, setIsLoading }) {
+function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const { run, status, retryCountdown, retriesLeft, errorInfo, getMessage } = useLogin();
 
-  const handleLogin = async (email, password) => {
-    setIsLoading(true);
-    try {
-      const response = await LoginApi.authenticateUser(email, password);
-      localStorage.setItem('token', response.data.access_token);
+  const isBusy = status === STATUS.RUNNING || status === STATUS.WAKING_UP;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const result = await run({ email, password });
+    if (result?.success) {
+      localStorage.setItem('token', result.data.access_token);
       navigate('/staff');
-    } catch (err) {
-      console.error(err);
-      if (err.response && err.response.status === 401) {
-        alert(err.response.data.detail || 'Invalid email or password');
-      }
-      setIsLoading(false);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    handleLogin(email, password);
+  const handleRetry = () => {
+    handleSubmit({ preventDefault: () => { } });
   };
-
-  if (isLoading) return (
-    <BaseLayout currentPage={0} showSidebar={false}>
-      <MolLoadingPage />
-    </BaseLayout>
-  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900">
       <div className="bg-slate-800 p-8 rounded-xl shadow-2xl w-full max-w-md border border-slate-600">
         <AtmText as="h3" size="2xl" weight="semibold" color="dimmer" className="mb-6 text-center block">Login</AtmText>
+
+        <ObjRetryStatusBanner
+          status={status}
+          retryCountdown={retryCountdown}
+          retriesLeft={retriesLeft}
+          errorInfo={errorInfo}
+          getMessage={getMessage}
+          onRetry={handleRetry}
+        />
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <MolLabeledInput
             label="Email"
@@ -52,6 +53,7 @@ function LoginPage({ isLoading, setIsLoading }) {
             onChange={(e) => setEmail(e.target.value)}
             required
             variant='auth'
+            disabled={isBusy}
           />
           <MolLabeledInput
             label="Password"
@@ -63,15 +65,16 @@ function LoginPage({ isLoading, setIsLoading }) {
             required
             className="mb-2"
             variant='auth'
+            disabled={isBusy}
           />
-          <Button type="submit" fullWidth variant='primary' size='lg'>
-            Enter
+          <Button type="submit" fullWidth variant='primary' size='lg' disabled={isBusy}>
+            {isBusy ? 'Connecting…' : 'Enter'}
           </Button>
         </form>
         <div className="mt-5 text-center">
           <AtmText as="p" size="sm" color="muted">
             Don't have an account?{' '}
-            <LinkButton onClick={() => navigate('/register')}>
+            <LinkButton onClick={() => navigate('/register')} disabled={isBusy}>
               Register
             </LinkButton>
           </AtmText>

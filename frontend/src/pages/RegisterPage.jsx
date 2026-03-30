@@ -4,49 +4,53 @@ import { MolLabeledInput } from '../atomic/MolLabeledInput';
 import { Button, LinkButton } from '../atomic/AtmButton/index.js';
 import { AtmText } from '../atomic/AtmText/index.js';
 import { RegisterApi } from '../services/api.js';
+import { useRegister } from '../hooks/useRegister.js';
+import { ObjRetryStatusBanner } from '../atomic/ObjRetryStatusBanner';
+import { STATUS } from '../hooks/useRetryOnSleep';
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const { run, status, retryCountdown, retriesLeft, errorInfo, getMessage } = useRegister();
   const [email, setEmail] = useState('');
   const [confEmail, setConfEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
-  const handleRegister = async (email, confEmail, password, setError) => {
-    try {
-      const responseRegister = await RegisterApi.registerUser(email, password);
-      if (responseRegister.data) {
-        alert('User registered successfully');
-        navigate('/login');
-      }
-    } catch (error) {
-      if (error.response?.data?.detail === 'Email already registered') {
-        setError('Email already registered');
-      } else {
-        setError('Error registering user. Please try again.');
-      }
-      console.error('Registration error:', error.response?.data);
-    }
-  };
+  const isBusy = status === STATUS.RUNNING || status === STATUS.WAKING_UP;
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
-    if (!email || !password || !confEmail) {
-      setError('Fill in all fields');
+    if (!email || !confEmail || !password) {
+      setError('Please fill in all fields');
       return;
     }
     if (email !== confEmail) {
-      setError('The emails are not the same');
+      setError('Emails do not match');
       return;
     }
-    handleRegister(email, confEmail, password, setError);
+    const result = run({ email, password });
+    const resultData = result.data;
+    if (resultData?.success) {
+      alert('User registered successfully');
+      navigate('/login');
+    } else if (resultData?.error.response?.data?.detail === 'Email already registered') {
+      setError('Email already registered');
+    }
+    console.error(resultData?.error);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900">
       <div className="bg-slate-800 p-8 rounded-xl shadow-2xl w-full max-w-md border border-slate-600">
         <AtmText as="h3" size="2xl" weight="semibold" color="dimmer" className="mb-6 text-center block">Register</AtmText>
+        <ObjRetryStatusBanner
+          status={status}
+          getMessage={getMessage}
+          retryCountdown={retryCountdown}
+          retriesLeft={retriesLeft}
+          errorInfo={errorInfo}
+          className="mb-4"
+        />
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="p-3 bg-red-900/50 border border-red-700 rounded-lg">
@@ -62,6 +66,7 @@ function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             variant='auth'
+            disabled={isBusy}
           />
           <MolLabeledInput
             label="Confirm Email"
@@ -72,6 +77,7 @@ function RegisterPage() {
             onChange={(e) => setConfEmail(e.target.value)}
             required
             variant='auth'
+            disabled={isBusy}
           />
           <MolLabeledInput
             label="Password"
@@ -83,15 +89,16 @@ function RegisterPage() {
             required
             className="mb-2"
             variant='auth'
+            disabled={isBusy}
           />
-          <Button type="submit" fullWidth variant='primary' size='lg'>
+          <Button type="submit" fullWidth variant='primary' size='lg' disabled={isBusy}>
             Register
           </Button>
         </form>
         <div className="mt-5 text-center">
           <AtmText as="p" size="sm" color="muted">
             Already have an account?{' '}
-            <LinkButton onClick={() => navigate('/login')}>
+            <LinkButton onClick={() => navigate('/login')} disabled={isBusy}>
               Login
             </LinkButton>
           </AtmText>
