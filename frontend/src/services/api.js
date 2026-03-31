@@ -225,10 +225,16 @@ export const GeneratedScheduleApi = {
   },
 };
 
+const authApi = axios.create({
+  baseURL: import.meta.env.VITE_BASE_URL,
+  timeout: 8000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
 export const LoginApi = {
   authenticateUser: async (email, password) => {
     try {
-      return await api.post('/auth/login', { email, password });
+      return await authApi.post('/auth/login', { email, password });
     } catch (error) {
       console.error('Error sending login data:', error);
       throw error;
@@ -239,7 +245,7 @@ export const LoginApi = {
 export const RegisterApi = {
   registerUser: async (email, password) => {
     try {
-      return await api.post('/users', { email, password });
+      return await authApi.post('/users', { email, password });
     } catch (error) {
       console.error('Error sending registration data:', error);
       throw error;

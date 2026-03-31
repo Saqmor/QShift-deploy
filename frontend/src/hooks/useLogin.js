@@ -25,7 +25,7 @@ export function useLogin() {
     }, []);
 
     return useRetryOnSleep(loginFn, {
-        retryDelayMs: 30000,
+        retryDelayMs: 25000,
         maxAutoRetries: 1,
         messages: {
             running: {

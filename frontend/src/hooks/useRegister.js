@@ -9,7 +9,7 @@ export function useRegister() {
 
     return useRetryOnSleep(registerFn, {
         maxAutoRetries: 1,
-        retryDelayMs: 30000,
+        retryDelayMs: 25000,
         messages: {
             running: {
                 title: 'Signing up…',
